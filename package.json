@@ -1,0 +1,48 @@
+{
+  "name": "resin-device-operations",
+  "version": "1.0.0",
+  "description": "Execute device spec operations",
+  "main": "build/operations.js",
+  "homepage": "https://github.com/resin-io/resin-device-operations",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/resin-io/resin-device-operations.git"
+  },
+  "keywords": [
+    "resin",
+    "device",
+    "spec",
+    "commands",
+    "command",
+    "operations",
+    "operation"
+  ],
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "gulp test && coffee tests/e2e.coffee",
+    "prepublish": "gulp build",
+    "readme": "jsdoc2md --template doc/README.hbs build/operations.js > README.md"
+  },
+  "author": "Juan Cruz Viotti <juanchiviotti@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "coffee-script": "^1.9.3",
+    "fs-extra": "^0.22.1",
+    "gulp": "^3.9.0",
+    "gulp-coffee": "^2.3.1",
+    "gulp-coffeelint": "^0.5.0",
+    "gulp-mocha": "^2.1.2",
+    "gulp-util": "~3.0.1",
+    "jsdoc-to-markdown": "^1.1.1",
+    "mocha": "^2.2.5",
+    "mochainon": "^1.0.0",
+    "wary": "^1.0.0"
+  },
+  "dependencies": {
+    "bluebird": "^2.9.34",
+    "lodash": "^3.10.0",
+    "resin-image-fs": "^2.1.0"
+  }
+}
