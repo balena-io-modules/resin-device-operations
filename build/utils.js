@@ -47,6 +47,7 @@ exports.waitStreamToClose = function(stream) {
   return new Promise(function(resolve, reject) {
     stream.on('error', reject);
     stream.on('end', resolve);
+    stream.on('done', resolve);
     return stream.on('close', function(code) {
       if ((code != null) && code !== 0) {
         return reject(new Error("Exitted with error code: " + code));

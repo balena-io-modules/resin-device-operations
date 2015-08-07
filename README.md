@@ -35,6 +35,12 @@ This function returns an `EventEmitter` object that emits the following events:
 - `error (Error error)`: When an error happens.
 - `end`: When all the operations are completed successfully.
 
+It can also emit these command specific events:
+
+- `run-script:stdout (String data)`: When a script prints to stdout.
+- `run-script:stderr (String data)`: When a script prints to stderr.
+- `burn:progress (Object state)`: When a burn operation emits progress events.
+
 **Kind**: static method of <code>[operations](#module_operations)</code>  
 **Summary**: Execute a set of operations over an image  
 **Access:** public  
@@ -76,6 +82,12 @@ execution = operations.execute 'foo/bar.img', [
 ],
 	coprocessorCore: '16'
 	processorType: 'Z7010'
+
+execution.on('run-script:stdout', process.stdout.write)
+execution.on('run-script:stderr', process.stderr.write)
+
+execution.on 'burn:progress', (state) ->
+	console.log(state.percentage)
 
 execution.on 'state', (state) ->
 	console.log(state.operation.command)

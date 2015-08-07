@@ -51,6 +51,12 @@ action = require('./action');
  * - `error (Error error)`: When an error happens.
  * - `end`: When all the operations are completed successfully.
  *
+ * It can also emit these command specific events:
+ *
+ * - `run-script:stdout (String data)`: When a script prints to stdout.
+ * - `run-script:stderr (String data)`: When a script prints to stderr.
+ * - `burn:progress (Object state)`: When a burn operation emits progress events.
+ *
  * @param {String} image - path to image
  * @param {Object[]} operations - array of operations
  * @param {Object} options - configuration options
@@ -88,6 +94,12 @@ action = require('./action');
  * 	coprocessorCore: '16'
  * 	processorType: 'Z7010'
  *
+ * execution.on('run-script:stdout', process.stdout.write)
+ * execution.on('run-script:stderr', process.stderr.write)
+ *
+ * execution.on 'burn:progress', (state) ->
+ * 	console.log(state.percentage)
+ *
  * execution.on 'state', (state) ->
  * 	console.log(state.operation.command)
  * 	console.log(state.percentage)
@@ -101,8 +113,13 @@ action = require('./action');
 
 exports.execute = function(image, operations, options) {
   var emitter, promises;
+  if (options == null) {
+    options = {};
+  }
   operations = utils.filterWhenMatches(operations, options);
-  promises = _.map(operations, _.partial(action.run, image));
+  promises = _.map(operations, function(operation) {
+    return action.run(image, operation, options);
+  });
   emitter = new EventEmitter();
   Promise.each(promises, function(promise, index) {
     var state;
@@ -111,7 +128,18 @@ exports.execute = function(image, operations, options) {
       percentage: action.getOperationProgress(index, operations)
     };
     emitter.emit('state', state);
-    return promise();
+    return promise().then(function(actionEvent) {
+      actionEvent.on('run-script:stdout', function(data) {
+        return emitter.emit('run-script:stdout', data);
+      });
+      actionEvent.on('run-script:stderr', function(data) {
+        return emitter.emit('run-script:stderr', data);
+      });
+      actionEvent.on('burn:progress', function(state) {
+        return emitter.emit('burn:progress', state);
+      });
+      return utils.waitStreamToClose(actionEvent);
+    });
   }).then(function() {
     return emitter.emit('end');
   })["catch"](function(error) {

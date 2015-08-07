@@ -22,17 +22,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
-var Promise, child_process, imagefs, path, utils;
+var Promise, child_process, fs, imageWrite, imagefs, path;
 
 Promise = require('bluebird');
 
 child_process = require('child_process');
 
+fs = require('fs');
+
 path = require('path');
 
 imagefs = require('resin-image-fs');
 
-utils = require('./utils');
+imageWrite = require('resin-image-write');
 
 module.exports = {
   copy: function(image, operation) {
@@ -43,14 +45,14 @@ module.exports = {
     if ((base1 = operation.to).image == null) {
       base1.image = image;
     }
-    return imagefs.copy(operation.from, operation.to).then(utils.waitStreamToClose);
+    return imagefs.copy(operation.from, operation.to);
   },
   replace: function(image, operation) {
     var base;
     if ((base = operation.file).image == null) {
       base.image = image;
     }
-    return imagefs.replace(operation.file, operation.find, operation.replace).then(utils.waitStreamToClose);
+    return imagefs.replace(operation.file, operation.find, operation.replace);
   },
   'run-script': function(image, operation) {
     operation.script = path.join(image, operation.script);
@@ -58,11 +60,32 @@ module.exports = {
       operation["arguments"] = [];
     }
     return Promise["try"](function() {
-      var script;
-      script = child_process.spawn(operation.script, operation["arguments"]);
-      script.stdout.on('data', process.stdout.write);
-      script.stderr.on('data', process.stderr.write);
-      return utils.waitStreamToClose(script);
+      var spawn;
+      spawn = child_process.spawn(operation.script, operation["arguments"]);
+      spawn.stdout.on('data', function(data) {
+        return spawn.emit('run-script:stdout', data);
+      });
+      spawn.stderr.on('data', function(data) {
+        return spawn.emit('run-script:stderr', data);
+      });
+      return spawn;
+    });
+  },
+  burn: function(image, operation, options) {
+    if (operation.image == null) {
+      operation.image = image;
+    }
+    return Promise["try"](function() {
+      var emitter, imageStream;
+      if (options.drive == null) {
+        throw new Error('Missing drive option');
+      }
+      imageStream = fs.createReadStream(operation.image);
+      emitter = imageWrite.write(options.drive, imageStream);
+      emitter.on('progress', function(state) {
+        return emitter.emit('burn:progress', state);
+      });
+      return emitter;
     });
   }
 };

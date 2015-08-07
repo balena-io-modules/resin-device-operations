@@ -43,6 +43,7 @@
   "dependencies": {
     "bluebird": "^2.9.34",
     "lodash": "^3.10.0",
-    "resin-image-fs": "^2.1.0"
+    "resin-image-fs": "^2.1.0",
+    "resin-image-write": "^1.0.0"
   }
 }
