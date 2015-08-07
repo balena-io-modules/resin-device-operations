@@ -5,12 +5,12 @@ path = require('path')
 imagefs = require('resin-image-fs')
 wary = require('wary')
 operations = require('../lib/operations')
-stdout = require('./utils/stdout')
 utils = require('../lib/utils')
 
 RASPBERRY_PI = path.join(__dirname, 'images', 'raspberrypi.img')
 EDISON = path.join(__dirname, 'images', 'edison-config.img')
 EDISON_ZIP = path.join(__dirname, 'images', 'edison')
+DEVICE = path.join(__dirname, 'images', 'device.random')
 
 FILES =
 	'cmdline.txt': 'dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'
@@ -287,17 +287,43 @@ wary.it 'should emit state events for operations',
 			percentage: 100
 
 wary.it 'should run a script with arguments that exits successfully', {}, ->
-	output = stdout.intercept()
-
 	configuration = operations.execute EDISON_ZIP, [
 		command: 'run-script'
 		script: 'echo.cmd'
 		arguments: [ 'hello', 'world' ]
 	]
 
+	stdout = ''
+	stderr = ''
+
+	configuration.on 'run-script:stdout', (data) ->
+		stdout += data
+
+	configuration.on 'run-script:stderr', (data) ->
+		stderr += data
+
 	utils.waitStreamToClose(configuration).then ->
-		m.chai.expect(output.data.replace(/\r/g, '')).to.equal('hello world\n')
-		output.restore()
+		m.chai.expect(stdout.replace(/\r/g, '')).to.equal('hello world\n')
+		m.chai.expect(stderr).to.equal('')
+
+wary.it 'should run a script that prints to stderr', {}, ->
+	configuration = operations.execute EDISON_ZIP, [
+		command: 'run-script'
+		script: 'stderr.cmd'
+	]
+
+	stdout = ''
+	stderr = ''
+
+	configuration.on 'run-script:stdout', (data) ->
+		stdout += data
+
+	configuration.on 'run-script:stderr', (data) ->
+		stderr += data
+
+	utils.waitStreamToClose(configuration).then ->
+		m.chai.expect(stdout).to.equal('')
+		m.chai.expect(stderr.replace(/[\r\n]/g, '').trim()).to.equal('stderr output')
 
 wary.it 'should be rejected if the script does not exist', {}, ->
 	configuration = operations.execute EDISON_ZIP, [
@@ -317,6 +343,38 @@ wary.it 'should be rejected if the script finishes with an error', {}, ->
 	promise = utils.waitStreamToClose(configuration)
 	m.chai.expect(promise).to.be.rejectedWith('Exitted with error code: 1')
 
+wary.it 'should burn an image to a file',
+	raspberrypi: RASPBERRY_PI
+	device: DEVICE
+, (images) ->
+	configuration = operations.execute images.raspberrypi, [
+		command: 'burn'
+	],
+		drive: images.device
+
+	progressSpy = m.sinon.spy()
+
+	configuration.on('burn:progress', progressSpy)
+
+	utils.waitStreamToClose(configuration).then ->
+		m.chai.expect(progressSpy).to.have.been.called
+
+		Promise.props
+			raspberrypi: fse.readFileAsync(images.raspberrypi)
+			device: fse.readFileAsync(images.device)
+		.then (files) ->
+			m.chai.expect(files.raspberrypi).to.deep.equal(files.device)
+
+wary.it 'should be rejected if trying to burn an image without a drive option',
+	raspberrypi: RASPBERRY_PI
+, (images) ->
+	configuration = operations.execute images.raspberrypi, [
+		command: 'burn'
+	]
+
+	promise = utils.waitStreamToClose(configuration)
+	m.chai.expect(promise).to.be.rejectedWith('Missing drive option')
+
 wary.run().catch (error) ->
-	console.error(error.message)
+	console.error(error.stack)
 	process.exit(1)

@@ -24,9 +24,10 @@ THE SOFTWARE.
 
 Promise = require('bluebird')
 child_process = require('child_process')
+fs = require('fs')
 path = require('path')
 imagefs = require('resin-image-fs')
-utils = require('./utils')
+imageWrite = require('resin-image-write')
 
 module.exports =
 
@@ -37,7 +38,6 @@ module.exports =
 		operation.to.image ?= image
 
 		return imagefs.copy(operation.from, operation.to)
-			.then(utils.waitStreamToClose)
 
 	replace: (image, operation) ->
 
@@ -45,7 +45,6 @@ module.exports =
 		operation.file.image ?= image
 
 		return imagefs.replace(operation.file, operation.find, operation.replace)
-			.then(utils.waitStreamToClose)
 
 	'run-script': (image, operation) ->
 
@@ -53,12 +52,27 @@ module.exports =
 		operation.arguments ?= []
 
 		Promise.try ->
-			script = child_process.spawn(operation.script, operation.arguments)
+			spawn = child_process.spawn(operation.script, operation.arguments)
 
-			# Pipe to stdout/stderr manually instead of using
-			# stdio: 'inherit' since with the latter approach
-			# we're unable to intercept stdio from the unit tests.
-			script.stdout.on('data', process.stdout.write)
-			script.stderr.on('data', process.stderr.write)
+			spawn.stdout.on 'data', (data) ->
+				return spawn.emit('run-script:stdout', data)
 
-			return utils.waitStreamToClose(script)
+			spawn.stderr.on 'data', (data) ->
+				return spawn.emit('run-script:stderr', data)
+
+			return spawn
+
+	burn: (image, operation, options) ->
+
+		# Default image to the given path
+		operation.image ?= image
+
+		Promise.try ->
+			throw new Error('Missing drive option') if not options.drive?
+			imageStream = fs.createReadStream(operation.image)
+			emitter = imageWrite.write(options.drive, imageStream)
+
+			emitter.on 'progress', (state) ->
+				return emitter.emit('burn:progress', state)
+
+			return emitter

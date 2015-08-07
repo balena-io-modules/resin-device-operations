@@ -44,6 +44,12 @@ action = require('./action')
 # - `error (Error error)`: When an error happens.
 # - `end`: When all the operations are completed successfully.
 #
+# It can also emit these command specific events:
+#
+# - `run-script:stdout (String data)`: When a script prints to stdout.
+# - `run-script:stderr (String data)`: When a script prints to stderr.
+# - `burn:progress (Object state)`: When a burn operation emits progress events.
+#
 # @param {String} image - path to image
 # @param {Object[]} operations - array of operations
 # @param {Object} options - configuration options
@@ -81,6 +87,12 @@ action = require('./action')
 # 	coprocessorCore: '16'
 # 	processorType: 'Z7010'
 #
+# execution.on('run-script:stdout', process.stdout.write)
+# execution.on('run-script:stderr', process.stderr.write)
+#
+# execution.on 'burn:progress', (state) ->
+# 	console.log(state.percentage)
+#
 # execution.on 'state', (state) ->
 # 	console.log(state.operation.command)
 # 	console.log(state.percentage)
@@ -91,9 +103,10 @@ action = require('./action')
 # execution.on 'end', ->
 # 	console.log('Finished all operations')
 ###
-exports.execute = (image, operations, options) ->
+exports.execute = (image, operations, options = {}) ->
 	operations = utils.filterWhenMatches(operations, options)
-	promises = _.map(operations, _.partial(action.run, image))
+	promises = _.map operations, (operation) ->
+		return action.run(image, operation, options)
 
 	emitter = new EventEmitter()
 
@@ -103,7 +116,21 @@ exports.execute = (image, operations, options) ->
 			percentage: action.getOperationProgress(index, operations)
 
 		emitter.emit('state', state)
-		return promise()
+
+		promise().then (actionEvent) ->
+
+			# Expose events that the client might be interested in
+
+			actionEvent.on 'run-script:stdout', (data) ->
+				emitter.emit('run-script:stdout', data)
+
+			actionEvent.on 'run-script:stderr', (data) ->
+				emitter.emit('run-script:stderr', data)
+
+			actionEvent.on 'burn:progress', (state) ->
+				emitter.emit('burn:progress', state)
+
+			return utils.waitStreamToClose(actionEvent)
 	.then ->
 		emitter.emit('end')
 	.catch (error) ->
