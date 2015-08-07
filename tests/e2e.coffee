@@ -5,7 +5,6 @@ path = require('path')
 imagefs = require('resin-image-fs')
 wary = require('wary')
 operations = require('../lib/operations')
-stdout = require('./utils/stdout')
 utils = require('../lib/utils')
 
 RASPBERRY_PI = path.join(__dirname, 'images', 'raspberrypi.img')
@@ -287,17 +286,43 @@ wary.it 'should emit state events for operations',
 			percentage: 100
 
 wary.it 'should run a script with arguments that exits successfully', {}, ->
-	output = stdout.intercept()
-
 	configuration = operations.execute EDISON_ZIP, [
 		command: 'run-script'
 		script: 'echo.cmd'
 		arguments: [ 'hello', 'world' ]
 	]
 
+	stdout = ''
+	stderr = ''
+
+	configuration.on 'stdout', (data) ->
+		stdout += data
+
+	configuration.on 'stderr', (data) ->
+		stderr += data
+
 	utils.waitStreamToClose(configuration).then ->
-		m.chai.expect(output.data.replace(/\r/g, '')).to.equal('hello world\n')
-		output.restore()
+		m.chai.expect(stdout.replace(/\r/g, '')).to.equal('hello world\n')
+		m.chai.expect(stderr).to.equal('')
+
+wary.it 'should run a script that prints to stderr', {}, ->
+	configuration = operations.execute EDISON_ZIP, [
+		command: 'run-script'
+		script: 'stderr.cmd'
+	]
+
+	stdout = ''
+	stderr = ''
+
+	configuration.on 'stdout', (data) ->
+		stdout += data
+
+	configuration.on 'stderr', (data) ->
+		stderr += data
+
+	utils.waitStreamToClose(configuration).then ->
+		m.chai.expect(stdout).to.equal('')
+		m.chai.expect(stderr.replace(/[\r\n]/g, '').trim()).to.equal('stderr output')
 
 wary.it 'should be rejected if the script does not exist', {}, ->
 	configuration = operations.execute EDISON_ZIP, [

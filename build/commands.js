@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
-var Promise, child_process, imagefs, path, utils;
+var Promise, child_process, imagefs, path;
 
 Promise = require('bluebird');
 
@@ -31,8 +31,6 @@ child_process = require('child_process');
 path = require('path');
 
 imagefs = require('resin-image-fs');
-
-utils = require('./utils');
 
 module.exports = {
   copy: function(image, operation) {
@@ -43,14 +41,14 @@ module.exports = {
     if ((base1 = operation.to).image == null) {
       base1.image = image;
     }
-    return imagefs.copy(operation.from, operation.to).then(utils.waitStreamToClose);
+    return imagefs.copy(operation.from, operation.to);
   },
   replace: function(image, operation) {
     var base;
     if ((base = operation.file).image == null) {
       base.image = image;
     }
-    return imagefs.replace(operation.file, operation.find, operation.replace).then(utils.waitStreamToClose);
+    return imagefs.replace(operation.file, operation.find, operation.replace);
   },
   'run-script': function(image, operation) {
     operation.script = path.join(image, operation.script);
@@ -58,11 +56,7 @@ module.exports = {
       operation["arguments"] = [];
     }
     return Promise["try"](function() {
-      var script;
-      script = child_process.spawn(operation.script, operation["arguments"]);
-      script.stdout.on('data', process.stdout.write);
-      script.stderr.on('data', process.stderr.write);
-      return utils.waitStreamToClose(script);
+      return child_process.spawn(operation.script, operation["arguments"]);
     });
   }
 };
