@@ -23,6 +23,16 @@ extract = (stream) ->
 		stream.on 'end', ->
 			resolve(result)
 
+wary.it 'should be fulfilled if no operations', {}, ->
+	configuration = operations.execute(RASPBERRY_PI, [])
+	promise = utils.waitStreamToClose(configuration)
+	m.chai.expect(promise).to.eventually.be.undefined
+
+wary.it 'should be fulfilled if operations is undefined', {}, ->
+	configuration = operations.execute(RASPBERRY_PI)
+	promise = utils.waitStreamToClose(configuration)
+	m.chai.expect(promise).to.eventually.be.undefined
+
 wary.it 'should be rejected if the command does not exist',
 	raspberrypi: RASPBERRY_PI
 , (images) ->
