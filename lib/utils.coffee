@@ -80,6 +80,11 @@ exports.isObjectSubset = (object, subset) ->
 # @description
 # This function discards the operations that don't match given certain options.
 #
+# @param {Object[]} operations - array of operations
+# @param {Object} options - configuration options
+#
+# @returns {Object[]} filtered operations
+#
 # @example
 # operations = utils.filterWhenMatches [
 # 	command: 'foo'
