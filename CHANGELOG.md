@@ -9,4 +9,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - Emit `stdout`/`stderr` events for `run-script` commands instead of printing directly.
 
-[1.0.0]: https://github.com/resin-io/resin-token/compare/v1.0.0...v1.0.1
+[1.0.1]: https://github.com/resin-io/resin-token/compare/v1.0.0...v1.0.1
