@@ -113,3 +113,35 @@ exports.filterWhenMatches = function(operations, options) {
     return exports.isObjectSubset(options, operation.when);
   });
 };
+
+
+/**
+ * @summary Get missing options from operations `when` properties
+ * @function
+ * @protected
+ *
+ * @param {Object[]} operations - array of operations
+ * @param {Object} options - configuration options
+ *
+ * @returns {String[]} missing options
+ *
+ * @example
+ * missingOptions = utils.getMissingOptions [
+ * 	command: 'foo'
+ * 	when:
+ * 		foo: 1
+ * ],
+ * 	bar: 2
+ *
+ * console.log(missingOptions)
+ * > [ 'foo' ]
+ */
+
+exports.getMissingOptions = function(operations, options) {
+  var usedOptions;
+  if (options == null) {
+    options = {};
+  }
+  usedOptions = _.flatten(_.map(_.pluck(operations, 'when'), _.keys));
+  return _.difference(usedOptions, _.keys(options));
+};
