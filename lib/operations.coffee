@@ -29,6 +29,7 @@ THE SOFTWARE.
 EventEmitter = require('events').EventEmitter
 Promise = require('bluebird')
 _ = require('lodash')
+_.str = require('underscore.string')
 utils = require('./utils')
 action = require('./action')
 
@@ -97,6 +98,11 @@ action = require('./action')
 # 	console.log('Finished all operations')
 ###
 exports.execute = (image, operations, options) ->
+	missingOptions = utils.getMissingOptions(operations, options)
+
+	if not _.isEmpty(missingOptions)
+		throw new Error("Missing options: #{_.str.toSentence(missingOptions)}")
+
 	operations = utils.filterWhenMatches(operations, options)
 	promises = _.map(operations, _.partial(action.run, image))
 

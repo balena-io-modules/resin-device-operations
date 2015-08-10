@@ -185,3 +185,55 @@ describe 'Utils:', ->
 			it 'should not be able to match using strings', ->
 				operations = utils.filterWhenMatches(@operations, foo: '1')
 				m.chai.expect(operations).to.deep.equal([])
+
+	describe '.getMissingOptions()', ->
+
+		describe 'given a single command operations', ->
+
+			beforeEach ->
+				@operations = [
+					command: 'foo'
+					when:
+						foo: 1
+				]
+
+			it 'should return a single item array if missing foo', ->
+				result = utils.getMissingOptions(@operations, bar: 2)
+				m.chai.expect(result).to.deep.equal([ 'foo' ])
+
+			it 'should return a single item array if no options', ->
+				result = utils.getMissingOptions(@operations, null)
+				m.chai.expect(result).to.deep.equal([ 'foo' ])
+
+			it 'should return an empty array if not missing anything', ->
+				result = utils.getMissingOptions(@operations, foo: 2)
+				m.chai.expect(result).to.deep.equal([])
+
+		describe 'given multiple command operations', ->
+
+			beforeEach ->
+				@operations = [
+					command: 'foo'
+					when:
+						foo: 1
+				,
+					command: 'foo'
+					when:
+						bar: 1
+						baz: 1
+				]
+
+			it 'should return a 3 items array if no options', ->
+				result = utils.getMissingOptions(@operations, {})
+				m.chai.expect(result).to.deep.equal([ 'foo', 'bar', 'baz' ])
+
+			it 'should return a 2 items array if one option exist', ->
+				result = utils.getMissingOptions(@operations, bar: 4)
+				m.chai.expect(result).to.deep.equal([ 'foo', 'baz' ])
+
+			it 'should return an empty array if not missing anything', ->
+				result = utils.getMissingOptions @operations,
+					foo: 1
+					bar: 2
+					baz: 3
+				m.chai.expect(result).to.deep.equal([])

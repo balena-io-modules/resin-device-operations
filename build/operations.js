@@ -34,6 +34,8 @@ Promise = require('bluebird');
 
 _ = require('lodash');
 
+_.str = require('underscore.string');
+
 utils = require('./utils');
 
 action = require('./action');
@@ -105,7 +107,11 @@ action = require('./action');
  */
 
 exports.execute = function(image, operations, options) {
-  var emitter, promises;
+  var emitter, missingOptions, promises;
+  missingOptions = utils.getMissingOptions(operations, options);
+  if (!_.isEmpty(missingOptions)) {
+    throw new Error("Missing options: " + (_.str.toSentence(missingOptions)));
+  }
   operations = utils.filterWhenMatches(operations, options);
   promises = _.map(operations, _.partial(action.run, image));
   emitter = new EventEmitter();
