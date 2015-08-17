@@ -108,6 +108,15 @@ exports.execute = (image, operations, options) ->
 
 	emitter = new EventEmitter()
 
+	# There is an edge case where the event emitter instance
+	# emits the `end` event before the client is able to
+	# register a listener for it.
+	emitterOn = emitter.on
+	emitter.on = (event, callback) ->
+		if event is 'end' and emitter.ended
+			return callback()
+		emitterOn.apply(emitter, arguments)
+
 	Promise.each promises, (promise, index) ->
 		state =
 			operation: operations[index]
@@ -127,6 +136,11 @@ exports.execute = (image, operations, options) ->
 			return utils.waitStreamToClose(actionEvent)
 	.then ->
 		emitter.emit('end')
+
+		# Mark the emitter as ended.
+		# Used to stub `emitter.on()` above.
+		emitter.ended = true
+
 	.catch (error) ->
 		emitter.emit('error', error)
 

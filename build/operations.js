@@ -107,7 +107,7 @@ action = require('./action');
  */
 
 exports.execute = function(image, operations, options) {
-  var emitter, missingOptions, promises;
+  var emitter, emitterOn, missingOptions, promises;
   missingOptions = utils.getMissingOptions(operations, options);
   if (!_.isEmpty(missingOptions)) {
     throw new Error("Missing options: " + (_.str.toSentence(missingOptions)));
@@ -115,6 +115,13 @@ exports.execute = function(image, operations, options) {
   operations = utils.filterWhenMatches(operations, options);
   promises = _.map(operations, _.partial(action.run, image));
   emitter = new EventEmitter();
+  emitterOn = emitter.on;
+  emitter.on = function(event, callback) {
+    if (event === 'end' && emitter.ended) {
+      return callback();
+    }
+    return emitterOn.apply(emitter, arguments);
+  };
   Promise.each(promises, function(promise, index) {
     var state;
     state = {
@@ -137,7 +144,8 @@ exports.execute = function(image, operations, options) {
       return utils.waitStreamToClose(actionEvent);
     });
   }).then(function() {
-    return emitter.emit('end');
+    emitter.emit('end');
+    return emitter.ended = true;
   })["catch"](function(error) {
     return emitter.emit('error', error);
   });
