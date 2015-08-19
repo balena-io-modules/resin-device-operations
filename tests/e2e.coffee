@@ -33,6 +33,15 @@ wary.it 'should be fulfilled if operations is undefined', {}, ->
 	promise = utils.waitStreamToClose(configuration)
 	m.chai.expect(promise).to.eventually.be.undefined
 
+wary.it 'should be fulfilled even if it finished long ago', {}, ->
+	f = ->
+		configuration = operations.execute(RASPBERRY_PI)
+		Promise.delay(1000).return(configuration)
+
+	f().then (configuration) ->
+		promise = utils.waitStreamToClose(configuration)
+		m.chai.expect(promise).to.eventually.be.undefined
+
 wary.it 'should be rejected if the command does not exist',
 	raspberrypi: RASPBERRY_PI
 , (images) ->
