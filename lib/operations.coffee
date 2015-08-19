@@ -104,7 +104,8 @@ exports.execute = (image, operations, options) ->
 		throw new Error("Missing options: #{_.str.toSentence(missingOptions)}")
 
 	operations = utils.filterWhenMatches(operations, options)
-	promises = _.map(operations, _.partial(action.run, image))
+	promises = _.map operations, (operation) ->
+		return action.run(image, operation, options)
 
 	emitter = new EventEmitter()
 
