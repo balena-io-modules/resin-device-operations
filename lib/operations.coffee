@@ -125,6 +125,10 @@ exports.execute = (image, operations, options) ->
 			actionEvent.stderr?.on 'data', (data) ->
 				emitter.emit('stderr', data)
 
+			# Emit burn command progress state as `burn`
+			actionEvent.on 'progress', (state) ->
+				emitter.emit('burn', state)
+
 			return utils.waitStreamToClose(actionEvent)
 	.then ->
 		emitter.emit('end')

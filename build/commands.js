@@ -22,15 +22,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
-var Promise, child_process, imagefs, path;
+var Promise, child_process, fs, imageWrite, imagefs, path;
 
 Promise = require('bluebird');
 
 child_process = require('child_process');
 
+fs = require('fs');
+
 path = require('path');
 
 imagefs = require('resin-image-fs');
+
+imageWrite = require('resin-image-write');
 
 module.exports = {
   copy: function(image, operation) {
@@ -57,6 +61,19 @@ module.exports = {
     }
     return Promise["try"](function() {
       return child_process.spawn(operation.script, operation["arguments"]);
+    });
+  },
+  burn: function(image, operation, options) {
+    if (operation.image == null) {
+      operation.image = image;
+    }
+    return Promise["try"](function() {
+      var imageReadStream;
+      if ((options != null ? options.drive : void 0) == null) {
+        throw new Error('Missing drive option');
+      }
+      imageReadStream = fs.createReadStream(operation.image);
+      return imageWrite.write(options.drive, imageReadStream);
     });
   }
 };

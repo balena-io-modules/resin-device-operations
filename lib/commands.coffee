@@ -24,8 +24,10 @@ THE SOFTWARE.
 
 Promise = require('bluebird')
 child_process = require('child_process')
+fs = require('fs')
 path = require('path')
 imagefs = require('resin-image-fs')
+imageWrite = require('resin-image-write')
 
 module.exports =
 
@@ -51,3 +53,15 @@ module.exports =
 
 		Promise.try ->
 			return child_process.spawn(operation.script, operation.arguments)
+
+	burn: (image, operation, options) ->
+
+		# Default image to the given path
+		operation.image ?= image
+
+		Promise.try ->
+			if not options?.drive?
+				throw new Error('Missing drive option')
+
+			imageReadStream = fs.createReadStream(operation.image)
+			return imageWrite.write(options.drive, imageReadStream)

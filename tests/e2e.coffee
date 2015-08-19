@@ -10,6 +10,7 @@ utils = require('../lib/utils')
 RASPBERRY_PI = path.join(__dirname, 'images', 'raspberrypi.img')
 EDISON = path.join(__dirname, 'images', 'edison-config.img')
 EDISON_ZIP = path.join(__dirname, 'images', 'edison')
+RANDOM = path.join(__dirname, 'images', 'device.random')
 
 FILES =
 	'cmdline.txt': 'dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'
@@ -351,6 +352,30 @@ wary.it 'should be rejected if the script finishes with an error', {}, ->
 
 	promise = utils.waitStreamToClose(configuration)
 	m.chai.expect(promise).to.be.rejectedWith('Exitted with error code: 1')
+
+wary.it 'should be rejected if the burn operation lacks a drive option', {}, ->
+	configuration = operations.execute RASPBERRY_PI, [
+		command: 'burn'
+	]
+
+	promise = utils.waitStreamToClose(configuration)
+	m.chai.expect(promise).to.be.rejectedWith('Missing drive option')
+
+wary.it 'should be able to burn an image',
+	raspberrypi: RASPBERRY_PI
+	random: RANDOM
+, (images) ->
+	configuration = operations.execute images.raspberrypi, [
+		command: 'burn'
+	],
+		drive: images.random
+
+	utils.waitStreamToClose(configuration).then ->
+		Promise.props
+			raspberrypi: fse.readFileAsync(images.raspberrypi)
+			random: fse.readFileAsync(images.random)
+		.then (results) ->
+			m.chai.expect(results.random).to.deep.equal(results.raspberrypi)
 
 wary.run().catch (error) ->
 	console.error(error.message)

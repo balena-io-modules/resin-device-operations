@@ -136,6 +136,9 @@ exports.execute = function(image, operations, options) {
           return emitter.emit('stderr', data);
         });
       }
+      actionEvent.on('progress', function(state) {
+        return emitter.emit('burn', state);
+      });
       return utils.waitStreamToClose(actionEvent);
     });
   }).then(function() {
