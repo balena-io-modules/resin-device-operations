@@ -104,7 +104,8 @@ exports.execute = (image, operations, options) ->
 		throw new Error("Missing options: #{_.str.toSentence(missingOptions)}")
 
 	operations = utils.filterWhenMatches(operations, options)
-	promises = _.map(operations, _.partial(action.run, image))
+	promises = _.map operations, (operation) ->
+		return action.run(image, operation, options)
 
 	emitter = new EventEmitter()
 
@@ -132,6 +133,10 @@ exports.execute = (image, operations, options) ->
 
 			actionEvent.stderr?.on 'data', (data) ->
 				emitter.emit('stderr', data)
+
+			# Emit burn command progress state as `burn`
+			actionEvent.on 'progress', (state) ->
+				emitter.emit('burn', state)
 
 			return utils.waitStreamToClose(actionEvent)
 	.then ->

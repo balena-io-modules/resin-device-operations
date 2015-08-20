@@ -42,6 +42,7 @@ exports.waitStreamToClose = (stream) ->
 	return new Promise (resolve, reject) ->
 		stream.on('error', reject)
 		stream.on('end', resolve)
+		stream.on('done', resolve)
 		stream.on 'close', (code) ->
 			if code? and code isnt 0
 				return reject(new Error("Exitted with error code: #{code}"))

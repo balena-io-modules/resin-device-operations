@@ -52,6 +52,17 @@ describe 'Utils:', ->
 			it 'should resolve the promise', ->
 				m.chai.expect(utils.waitStreamToClose(@object)).to.be.resolved
 
+		describe 'given an object that emits a done event', ->
+
+			beforeEach ->
+				@object = new EventEmitter()
+				setTimeout =>
+					@object.emit('done')
+				, 100
+
+			it 'should resolve the promise', ->
+				m.chai.expect(utils.waitStreamToClose(@object)).to.be.resolved
+
 		describe 'given an object that emits an error event', ->
 
 			beforeEach ->
