@@ -119,27 +119,28 @@ exports.execute = (image, operations, options) ->
 				return callback()
 			emitterOn.apply(emitter, arguments)
 
-		Promise.each promises, (promise, index) ->
-			state =
-				operation: operations[index]
-				percentage: action.getOperationProgress(index, operations)
+		Promise.delay(1).then ->
+			Promise.each promises, (promise, index) ->
+				state =
+					operation: operations[index]
+					percentage: action.getOperationProgress(index, operations)
 
-			emitter.emit('state', state)
+				emitter.emit('state', state)
 
-			promise().then (actionEvent) ->
+				promise().then (actionEvent) ->
 
-				# Pipe stdout/stderr events
-				actionEvent.stdout?.on 'data', (data) ->
-					emitter.emit('stdout', data)
+					# Pipe stdout/stderr events
+					actionEvent.stdout?.on 'data', (data) ->
+						emitter.emit('stdout', data)
 
-				actionEvent.stderr?.on 'data', (data) ->
-					emitter.emit('stderr', data)
+					actionEvent.stderr?.on 'data', (data) ->
+						emitter.emit('stderr', data)
 
-				# Emit burn command progress state as `burn`
-				actionEvent.on 'progress', (state) ->
-					emitter.emit('burn', state)
+					# Emit burn command progress state as `burn`
+					actionEvent.on 'progress', (state) ->
+						emitter.emit('burn', state)
 
-				return utils.waitStreamToClose(actionEvent)
+					return utils.waitStreamToClose(actionEvent)
 	.then ->
 		emitter.emit('end')
 

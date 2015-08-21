@@ -305,6 +305,40 @@ wary.it 'should emit state events for operations',
 				replace: 'lpm_enable=1'
 			percentage: 100
 
+wary.it 'should read state events for operations after a slight delay',
+	raspberrypi: RASPBERRY_PI
+, (images) ->
+
+	configure = ->
+		Promise.try ->
+			return operations.execute images.raspberrypi, [
+				command: 'replace'
+				file:
+					partition:
+						primary: 1
+					path: '/cmdline.txt'
+				find: 'lpm_enable=0'
+				replace: 'lpm_enable=1'
+			]
+
+	configure().then (configuration) ->
+		stateSpy = m.sinon.spy()
+		configuration.on('state', stateSpy)
+
+		utils.waitStreamToClose(configuration).then ->
+			m.chai.expect(stateSpy).to.have.been.calledOnce
+			m.chai.expect(stateSpy.firstCall.args[0]).to.deep.equal
+				operation:
+					command: 'replace'
+					file:
+						image: images.raspberrypi
+						partition:
+							primary: 1
+						path: '/cmdline.txt'
+					find: 'lpm_enable=0'
+					replace: 'lpm_enable=1'
+				percentage: 100
+
 wary.it 'should run a script with arguments that exits successfully', {}, ->
 	configuration = operations.execute EDISON_ZIP, [
 		command: 'run-script'
