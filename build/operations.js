@@ -107,46 +107,49 @@ action = require('./action');
  */
 
 exports.execute = function(image, operations, options) {
-  var emitter, emitterOn, missingOptions, promises;
+  var emitter, missingOptions;
   missingOptions = utils.getMissingOptions(operations, options);
   if (!_.isEmpty(missingOptions)) {
     throw new Error("Missing options: " + (_.str.toSentence(missingOptions)));
   }
-  operations = utils.filterWhenMatches(operations, options);
-  promises = _.map(operations, function(operation) {
-    return action.run(image, operation, options);
-  });
   emitter = new EventEmitter();
-  emitterOn = emitter.on;
-  emitter.on = function(event, callback) {
-    if (event === 'end' && emitter.ended) {
-      return callback();
-    }
-    return emitterOn.apply(emitter, arguments);
-  };
-  Promise.each(promises, function(promise, index) {
-    var state;
-    state = {
-      operation: operations[index],
-      percentage: action.getOperationProgress(index, operations)
+  Promise["try"](function() {
+    var emitterOn, promises;
+    operations = utils.filterWhenMatches(operations, options);
+    promises = _.map(operations, function(operation) {
+      return action.run(image, operation, options);
+    });
+    emitterOn = emitter.on;
+    emitter.on = function(event, callback) {
+      if (event === 'end' && emitter.ended) {
+        return callback();
+      }
+      return emitterOn.apply(emitter, arguments);
     };
-    emitter.emit('state', state);
-    return promise().then(function(actionEvent) {
-      var ref, ref1;
-      if ((ref = actionEvent.stdout) != null) {
-        ref.on('data', function(data) {
-          return emitter.emit('stdout', data);
+    return Promise.each(promises, function(promise, index) {
+      var state;
+      state = {
+        operation: operations[index],
+        percentage: action.getOperationProgress(index, operations)
+      };
+      emitter.emit('state', state);
+      return promise().then(function(actionEvent) {
+        var ref, ref1;
+        if ((ref = actionEvent.stdout) != null) {
+          ref.on('data', function(data) {
+            return emitter.emit('stdout', data);
+          });
+        }
+        if ((ref1 = actionEvent.stderr) != null) {
+          ref1.on('data', function(data) {
+            return emitter.emit('stderr', data);
+          });
+        }
+        actionEvent.on('progress', function(state) {
+          return emitter.emit('burn', state);
         });
-      }
-      if ((ref1 = actionEvent.stderr) != null) {
-        ref1.on('data', function(data) {
-          return emitter.emit('stderr', data);
-        });
-      }
-      actionEvent.on('progress', function(state) {
-        return emitter.emit('burn', state);
+        return utils.waitStreamToClose(actionEvent);
       });
-      return utils.waitStreamToClose(actionEvent);
     });
   }).then(function() {
     emitter.emit('end');

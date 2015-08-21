@@ -103,42 +103,43 @@ exports.execute = (image, operations, options) ->
 	if not _.isEmpty(missingOptions)
 		throw new Error("Missing options: #{_.str.toSentence(missingOptions)}")
 
-	operations = utils.filterWhenMatches(operations, options)
-	promises = _.map operations, (operation) ->
-		return action.run(image, operation, options)
-
 	emitter = new EventEmitter()
 
-	# There is an edge case where the event emitter instance
-	# emits the `end` event before the client is able to
-	# register a listener for it.
-	emitterOn = emitter.on
-	emitter.on = (event, callback) ->
-		if event is 'end' and emitter.ended
-			return callback()
-		emitterOn.apply(emitter, arguments)
+	Promise.try ->
+		operations = utils.filterWhenMatches(operations, options)
+		promises = _.map operations, (operation) ->
+			return action.run(image, operation, options)
 
-	Promise.each promises, (promise, index) ->
-		state =
-			operation: operations[index]
-			percentage: action.getOperationProgress(index, operations)
+		# There is an edge case where the event emitter instance
+		# emits the `end` event before the client is able to
+		# register a listener for it.
+		emitterOn = emitter.on
+		emitter.on = (event, callback) ->
+			if event is 'end' and emitter.ended
+				return callback()
+			emitterOn.apply(emitter, arguments)
 
-		emitter.emit('state', state)
+		Promise.each promises, (promise, index) ->
+			state =
+				operation: operations[index]
+				percentage: action.getOperationProgress(index, operations)
 
-		promise().then (actionEvent) ->
+			emitter.emit('state', state)
 
-			# Pipe stdout/stderr events
-			actionEvent.stdout?.on 'data', (data) ->
-				emitter.emit('stdout', data)
+			promise().then (actionEvent) ->
 
-			actionEvent.stderr?.on 'data', (data) ->
-				emitter.emit('stderr', data)
+				# Pipe stdout/stderr events
+				actionEvent.stdout?.on 'data', (data) ->
+					emitter.emit('stdout', data)
 
-			# Emit burn command progress state as `burn`
-			actionEvent.on 'progress', (state) ->
-				emitter.emit('burn', state)
+				actionEvent.stderr?.on 'data', (data) ->
+					emitter.emit('stderr', data)
 
-			return utils.waitStreamToClose(actionEvent)
+				# Emit burn command progress state as `burn`
+				actionEvent.on 'progress', (state) ->
+					emitter.emit('burn', state)
+
+				return utils.waitStreamToClose(actionEvent)
 	.then ->
 		emitter.emit('end')
 
