@@ -79,6 +79,6 @@ exports.run = (image, operation, options) ->
 	action = commands[operation.command]
 
 	if not action?
-		return Promise.reject(new Error("Unknown command: #{operation.command}"))
+		throw new Error("Unknown command: #{operation.command}")
 
 	return _.partial(action, image, operation, options)

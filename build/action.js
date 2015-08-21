@@ -89,7 +89,7 @@ exports.run = function(image, operation, options) {
   var action;
   action = commands[operation.command];
   if (action == null) {
-    return Promise.reject(new Error("Unknown command: " + operation.command));
+    throw new Error("Unknown command: " + operation.command);
   }
   return _.partial(action, image, operation, options);
 };
