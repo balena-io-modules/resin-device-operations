@@ -31,10 +31,10 @@ describe 'Command:', ->
 	describe '.run()', ->
 
 		it 'should be rejected if the command type is invalid', ->
-			promise = action.run 'foo/bar',
+			m.chai.expect ->
+				action.run 'foo/bar',
 				command: 'foobar'
-
-			m.chai.expect(promise).to.be.rejectedWith('Unknown command: foobar')
+			.to.throw('Unknown command: foobar')
 
 		describe 'given the command type exists', ->
 
