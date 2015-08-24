@@ -23,8 +23,8 @@ THE SOFTWARE.
 ###
 
 Promise = require('bluebird')
+fs = Promise.promisifyAll(require('fs'))
 child_process = require('child_process')
-fs = require('fs')
 path = require('path')
 imagefs = require('resin-image-fs')
 imageWrite = require('resin-image-write')
@@ -63,5 +63,13 @@ module.exports =
 			if not options?.drive?
 				throw new Error('Missing drive option')
 
+			return operation.image
+		.then(fs.statAsync).get('size')
+		.then (size) ->
 			imageReadStream = fs.createReadStream(operation.image)
+
+			# This is read by Resin Image Write to
+			# emit correct `progress` events.
+			imageReadStream.length ?= size
+
 			return imageWrite.write(options.drive, imageReadStream)

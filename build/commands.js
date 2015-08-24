@@ -26,9 +26,9 @@ var Promise, child_process, fs, imageWrite, imagefs, path;
 
 Promise = require('bluebird');
 
-child_process = require('child_process');
+fs = Promise.promisifyAll(require('fs'));
 
-fs = require('fs');
+child_process = require('child_process');
 
 path = require('path');
 
@@ -68,11 +68,16 @@ module.exports = {
       operation.image = image;
     }
     return Promise["try"](function() {
-      var imageReadStream;
       if ((options != null ? options.drive : void 0) == null) {
         throw new Error('Missing drive option');
       }
+      return operation.image;
+    }).then(fs.statAsync).get('size').then(function(size) {
+      var imageReadStream;
       imageReadStream = fs.createReadStream(operation.image);
+      if (imageReadStream.length == null) {
+        imageReadStream.length = size;
+      }
       return imageWrite.write(options.drive, imageReadStream);
     });
   }

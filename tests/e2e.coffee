@@ -413,7 +413,18 @@ wary.it 'should be able to burn an image',
 	],
 		drive: images.random
 
+	progressSpy = m.sinon.spy()
+	configuration.on('burn', progressSpy)
+
 	utils.waitStreamToClose(configuration).then ->
+
+		fse.statAsync(images.raspberrypi).get('size').then (size) ->
+			m.chai.expect(progressSpy).to.have.been.called
+			state = progressSpy.firstCall.args[0]
+			m.chai.expect(state.length).to.not.equal(0)
+			m.chai.expect(state.length).to.equal(size)
+
+	.then ->
 		Promise.props
 			raspberrypi: fse.readFileAsync(images.raspberrypi)
 			random: fse.readFileAsync(images.random)
