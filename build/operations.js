@@ -126,29 +126,31 @@ exports.execute = function(image, operations, options) {
       }
       return emitterOn.apply(emitter, arguments);
     };
-    return Promise.each(promises, function(promise, index) {
-      var state;
-      state = {
-        operation: operations[index],
-        percentage: action.getOperationProgress(index, operations)
-      };
-      emitter.emit('state', state);
-      return promise().then(function(actionEvent) {
-        var ref, ref1;
-        if ((ref = actionEvent.stdout) != null) {
-          ref.on('data', function(data) {
-            return emitter.emit('stdout', data);
+    return Promise.delay(1).then(function() {
+      return Promise.each(promises, function(promise, index) {
+        var state;
+        state = {
+          operation: operations[index],
+          percentage: action.getOperationProgress(index, operations)
+        };
+        emitter.emit('state', state);
+        return promise().then(function(actionEvent) {
+          var ref, ref1;
+          if ((ref = actionEvent.stdout) != null) {
+            ref.on('data', function(data) {
+              return emitter.emit('stdout', data);
+            });
+          }
+          if ((ref1 = actionEvent.stderr) != null) {
+            ref1.on('data', function(data) {
+              return emitter.emit('stderr', data);
+            });
+          }
+          actionEvent.on('progress', function(state) {
+            return emitter.emit('burn', state);
           });
-        }
-        if ((ref1 = actionEvent.stderr) != null) {
-          ref1.on('data', function(data) {
-            return emitter.emit('stderr', data);
-          });
-        }
-        actionEvent.on('progress', function(state) {
-          return emitter.emit('burn', state);
+          return utils.waitStreamToClose(actionEvent);
         });
-        return utils.waitStreamToClose(actionEvent);
       });
     });
   }).then(function() {
