@@ -46,11 +46,12 @@ wary.it 'should be fulfilled even if it finished long ago', {}, ->
 wary.it 'should be rejected if the command does not exist',
 	raspberrypi: RASPBERRY_PI
 , (images) ->
-	m.chai.expect ->
-		operations.execute images.raspberrypi, [
-			command: 'foobar'
-		]
-	.to.throw('Unknown command: foobar')
+	configuration = operations.execute images.raspberrypi, [
+		command: 'foobar'
+	]
+
+	promise = utils.waitStreamToClose(configuration)
+	m.chai.expect(promise).to.be.rejectedWith('Unknown command: foobar')
 
 wary.it 'should be able to copy a single file between raspberry pi partitions',
 	raspberrypi: RASPBERRY_PI
