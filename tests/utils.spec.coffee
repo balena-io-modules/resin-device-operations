@@ -248,3 +248,24 @@ describe 'Utils:', ->
 					bar: 2
 					baz: 3
 				m.chai.expect(result).to.deep.equal([])
+
+		describe 'given multiple command operations asking for the same option', ->
+
+			beforeEach ->
+				@operations = [
+					command: 'foo'
+					when:
+						os: 'osx'
+				,
+					command: 'foo'
+					when:
+						os: 'linux'
+				,
+					command: 'foo'
+					when:
+						os: 'win32'
+				]
+
+			it 'should return the missing option once', ->
+				result = utils.getMissingOptions(@operations, null)
+				m.chai.expect(result).to.deep.equal([ 'os' ])
