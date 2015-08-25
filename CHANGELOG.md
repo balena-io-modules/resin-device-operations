@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.3] - 2015-08-25
+
+### Changed
+
+- Fix missing options duplicates issue.
+
 ## [1.2.2] - 2015-08-24
 
 ### Changed
@@ -34,7 +40,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - Emit `stdout`/`stderr` events for `run-script` commands instead of printing directly.
 
-[1.2.1]: https://github.com/resin-io/resin-device-operations/compare/v1.2.1...v1.2.2
+[1.2.3]: https://github.com/resin-io/resin-device-operations/compare/v1.2.2...v1.2.3
+[1.2.2]: https://github.com/resin-io/resin-device-operations/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/resin-io/resin-device-operations/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/resin-io/resin-device-operations/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/resin-io/resin-device-operations/compare/v1.0.1...v1.1.0
