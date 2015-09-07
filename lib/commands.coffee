@@ -51,7 +51,7 @@ module.exports =
 		operation.script = path.join(image, operation.script)
 		operation.arguments ?= []
 
-		Promise.try ->
+		fs.chmodAsync(operation.script, 0o755).then ->
 			return child_process.spawn(operation.script, operation.arguments)
 
 	burn: (image, operation, options) ->

@@ -59,7 +59,7 @@ module.exports = {
     if (operation["arguments"] == null) {
       operation["arguments"] = [];
     }
-    return Promise["try"](function() {
+    return fs.chmodAsync(operation.script, 755).then(function() {
       return child_process.spawn(operation.script, operation["arguments"]);
     });
   },

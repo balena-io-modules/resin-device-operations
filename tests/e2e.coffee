@@ -387,6 +387,26 @@ wary.it 'should be rejected if the script does not exist', {}, ->
 	promise = utils.waitStreamToClose(configuration)
 	m.chai.expect(promise).to.be.rejectedWith('ENOENT')
 
+wary.it 'should run a script that doesn not have execution privileges', {}, ->
+	configuration = operations.execute EDISON_ZIP, [
+		command: 'run-script'
+		script: 'exec.cmd'
+		arguments: [ 'hello', 'world' ]
+	]
+
+	stdout = ''
+	stderr = ''
+
+	configuration.on 'stdout', (data) ->
+		stdout += data
+
+	configuration.on 'stderr', (data) ->
+		stderr += data
+
+	utils.waitStreamToClose(configuration).then ->
+		m.chai.expect(stdout.replace(/\r/g, '')).to.equal('hello world\n')
+		m.chai.expect(stderr).to.equal('')
+
 wary.it 'should be rejected if the script finishes with an error', {}, ->
 	configuration = operations.execute EDISON_ZIP, [
 		command: 'run-script'
