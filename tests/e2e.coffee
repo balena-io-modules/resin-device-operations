@@ -416,6 +416,25 @@ wary.it 'should be rejected if the script finishes with an error', {}, ->
 	promise = utils.waitStreamToClose(configuration)
 	m.chai.expect(promise).to.be.rejectedWith('Exitted with error code: 1')
 
+wary.it 'should change directory to the dirname of the script', {}, ->
+	configuration = operations.execute EDISON_ZIP, [
+		command: 'run-script'
+		script: 'cwd.cmd'
+	]
+
+	stdout = ''
+	stderr = ''
+
+	configuration.on 'stdout', (data) ->
+		stdout += data
+
+	configuration.on 'stderr', (data) ->
+		stderr += data
+
+	utils.waitStreamToClose(configuration).then ->
+		m.chai.expect(stdout.replace(/\r/g, '')).to.equal("#{EDISON_ZIP}#{path.sep}\n")
+		m.chai.expect(stderr).to.equal('')
+
 wary.it 'should be rejected if the burn operation lacks a drive option', {}, ->
 	configuration = operations.execute RASPBERRY_PI, [
 		command: 'burn'

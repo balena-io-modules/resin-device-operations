@@ -59,7 +59,8 @@ module.exports = {
     if (operation["arguments"] == null) {
       operation["arguments"] = [];
     }
-    return fs.chmodAsync(operation.script, 755).then(function() {
+    return fs.chmodAsync(operation.script, 0x1ed).then(function() {
+      process.chdir(image);
       return child_process.spawn(operation.script, operation["arguments"]);
     });
   },
