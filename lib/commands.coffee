@@ -58,6 +58,8 @@ module.exports =
 				# files within the same directory
 				cwd: image
 
+				stdio: [ 'inherit', 'pipe', 'pipe' ]
+
 	burn: (image, operation, options) ->
 
 		# Default image to the given path
