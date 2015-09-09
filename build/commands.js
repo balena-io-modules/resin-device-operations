@@ -61,7 +61,8 @@ module.exports = {
     }
     return fs.chmodAsync(operation.script, 0x1ed).then(function() {
       return child_process.spawn(operation.script, operation["arguments"], {
-        cwd: image
+        cwd: image,
+        stdio: [process.stdin, 'pipe', 'pipe']
       });
     });
   },
