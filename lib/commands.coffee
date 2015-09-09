@@ -52,12 +52,11 @@ module.exports =
 		operation.arguments ?= []
 
 		fs.chmodAsync(operation.script, 0o755).then ->
+			return child_process.spawn operation.script, operation.arguments,
 
-			# Some scripts rely on other executable
-			# files within the same directory
-			process.chdir(image)
-
-			return child_process.spawn(operation.script, operation.arguments)
+				# Some scripts rely on other executable
+				# files within the same directory
+				cwd: image
 
 	burn: (image, operation, options) ->
 
