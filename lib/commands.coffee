@@ -58,6 +58,15 @@ module.exports =
 				# files within the same directory
 				cwd: image
 
+				# Inherit stdio so we can interact with script.
+				# We're not able to test this since stdin file
+				# descriptor is not opened for writing when not
+				# running the process in a tty.
+				# Notice we pass `process.stdin` directly instead
+				# of using 'inherit' since the latter one is
+				# not supported in v0.10.
+				stdio: [ process.stdin, 'pipe', 'pipe' ]
+
 	burn: (image, operation, options) ->
 
 		# Default image to the given path
