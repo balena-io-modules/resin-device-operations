@@ -60,8 +60,9 @@ module.exports = {
       operation["arguments"] = [];
     }
     return fs.chmodAsync(operation.script, 0x1ed).then(function() {
-      process.chdir(image);
-      return child_process.spawn(operation.script, operation["arguments"]);
+      return child_process.spawn(operation.script, operation["arguments"], {
+        cwd: image
+      });
     });
   },
   burn: function(image, operation, options) {
