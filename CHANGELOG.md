@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.3.0] - 2015-10-12
+
+### Changed
+
+- Set an `os` option by default.
+
 ## [1.2.6] - 2015-09-09
 
 ### Changed
@@ -59,6 +65,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - Emit `stdout`/`stderr` events for `run-script` commands instead of printing directly.
 
+[1.3.0]: https://github.com/resin-io/resin-device-operations/compare/v1.2.6...v1.3.0
 [1.2.6]: https://github.com/resin-io/resin-device-operations/compare/v1.2.5...v1.2.6
 [1.2.5]: https://github.com/resin-io/resin-device-operations/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/resin-io/resin-device-operations/compare/v1.2.3...v1.2.4
