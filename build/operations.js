@@ -108,6 +108,12 @@ action = require('./action');
 
 exports.execute = function(image, operations, options) {
   var emitter, missingOptions;
+  if (options == null) {
+    options = {};
+  }
+  if (options.os == null) {
+    options.os = utils.getOperatingSystem();
+  }
   missingOptions = utils.getMissingOptions(operations, options);
   if (!_.isEmpty(missingOptions)) {
     throw new Error("Missing options: " + (_.str.toSentence(missingOptions)));

@@ -470,6 +470,89 @@ wary.it 'should be able to burn an image',
 		.then (results) ->
 			m.chai.expect(results.random).to.deep.equal(results.raspberrypi)
 
+wary.it 'should set an os option automatically',
+	edison: EDISON
+, (images) ->
+	configuration = operations.execute images.edison, [
+			command: 'replace'
+			file:
+				path: '/config.json'
+			find: /^.*$/g
+			replace: 'win32'
+			when:
+				os: 'win32'
+		,
+			command: 'replace'
+			file:
+				path: '/config.json'
+			find: /^.*$/g
+			replace: 'osx'
+			when:
+				os: 'osx'
+		,
+			command: 'replace'
+			file:
+				path: '/config.json'
+			find: /^.*$/g
+			replace: 'linux'
+			when:
+				os: 'linux'
+	]
+
+	utils.waitStreamToClose(configuration).then ->
+		imagefs.read
+			image: images.edison
+			path: '/config.json'
+		.then(extract)
+	.then (contents) ->
+		m.chai.expect(contents).to.equal(utils.getOperatingSystem())
+
+wary.it 'should allow the os option to be overrided',
+	edison: EDISON
+, (images) ->
+	configuration = operations.execute images.edison, [
+			command: 'replace'
+			file:
+				path: '/config.json'
+			find: /^.*$/g
+			replace: 'win32'
+			when:
+				os: 'win32'
+		,
+			command: 'replace'
+			file:
+				path: '/config.json'
+			find: /^.*$/g
+			replace: 'osx'
+			when:
+				os: 'osx'
+		,
+			command: 'replace'
+			file:
+				path: '/config.json'
+			find: /^.*$/g
+			replace: 'linux'
+			when:
+				os: 'linux'
+		,
+			command: 'replace'
+			file:
+				path: '/config.json'
+			find: /^.*$/g
+			replace: 'resinos'
+			when:
+				os: 'resinos'
+	],
+		os: 'resinos'
+
+	utils.waitStreamToClose(configuration).then ->
+		imagefs.read
+			image: images.edison
+			path: '/config.json'
+		.then(extract)
+	.then (contents) ->
+		m.chai.expect(contents).to.equal('resinos')
+
 wary.run().catch (error) ->
 	console.error(error.message)
 	process.exit(1)

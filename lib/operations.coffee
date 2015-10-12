@@ -97,7 +97,9 @@ action = require('./action')
 # execution.on 'end', ->
 # 	console.log('Finished all operations')
 ###
-exports.execute = (image, operations, options) ->
+exports.execute = (image, operations, options = {}) ->
+	options.os ?= utils.getOperatingSystem()
+
 	missingOptions = utils.getMissingOptions(operations, options)
 
 	if not _.isEmpty(missingOptions)
