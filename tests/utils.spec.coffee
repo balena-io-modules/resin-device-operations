@@ -1,5 +1,6 @@
 m = require('mochainon')
 _ = require('lodash')
+os = require('os')
 Promise = require('bluebird')
 EventEmitter = require('events').EventEmitter
 utils = require('../lib/utils')
@@ -269,3 +270,41 @@ describe 'Utils:', ->
 			it 'should return the missing option once', ->
 				result = utils.getMissingOptions(@operations, null)
 				m.chai.expect(result).to.deep.equal([ 'os' ])
+
+	describe '.getOperatingSystem()', ->
+
+		describe 'given darwin', ->
+
+			beforeEach ->
+				@osPlatformStub = m.sinon.stub(os, 'platform')
+				@osPlatformStub.returns('darwin')
+
+			afterEach ->
+				@osPlatformStub.restore()
+
+			it 'should return osx', ->
+				m.chai.expect(utils.getOperatingSystem()).to.equal('osx')
+
+		describe 'given win32', ->
+
+			beforeEach ->
+				@osPlatformStub = m.sinon.stub(os, 'platform')
+				@osPlatformStub.returns('win32')
+
+			afterEach ->
+				@osPlatformStub.restore()
+
+			it 'should return win32', ->
+				m.chai.expect(utils.getOperatingSystem()).to.equal('win32')
+
+		describe 'given linux', ->
+
+			beforeEach ->
+				@osPlatformStub = m.sinon.stub(os, 'platform')
+				@osPlatformStub.returns('linux')
+
+			afterEach ->
+				@osPlatformStub.restore()
+
+			it 'should return linux', ->
+				m.chai.expect(utils.getOperatingSystem()).to.equal('linux')

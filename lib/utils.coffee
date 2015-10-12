@@ -23,6 +23,7 @@ THE SOFTWARE.
 ###
 
 Promise = require('bluebird')
+os = require('os')
 _ = require('lodash')
 
 ###*
@@ -126,3 +127,20 @@ exports.filterWhenMatches = (operations, options = {}) ->
 exports.getMissingOptions = (operations, options = {}) ->
 	usedOptions = _.flatten(_.map(_.pluck(operations, 'when'), _.keys))
 	return _.uniq(_.difference(usedOptions, _.keys(options)))
+
+###*
+# @summary Get operating system
+# @function
+# @protected
+#
+# @returns {String} operating system
+#
+# @example
+# os = utils.getOperatingSystem()
+###
+exports.getOperatingSystem = ->
+	platform = os.platform()
+
+	switch platform
+		when 'darwin' then 'osx'
+		else platform
