@@ -22,9 +22,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
-var Promise, _;
+var Promise, _, os;
 
 Promise = require('bluebird');
+
+os = require('os');
 
 _ = require('lodash');
 
@@ -150,4 +152,27 @@ exports.getMissingOptions = function(operations, options) {
   }
   usedOptions = _.flatten(_.map(_.pluck(operations, 'when'), _.keys));
   return _.uniq(_.difference(usedOptions, _.keys(options)));
+};
+
+
+/**
+ * @summary Get operating system
+ * @function
+ * @protected
+ *
+ * @returns {String} operating system
+ *
+ * @example
+ * os = utils.getOperatingSystem()
+ */
+
+exports.getOperatingSystem = function() {
+  var platform;
+  platform = os.platform();
+  switch (platform) {
+    case 'darwin':
+      return 'osx';
+    default:
+      return platform;
+  }
 };
