@@ -6,6 +6,8 @@ resin-device-operations
 [![Build Status](https://travis-ci.org/resin-io/resin-device-operations.svg?branch=master)](https://travis-ci.org/resin-io/resin-device-operations)
 [![Build status](https://ci.appveyor.com/api/projects/status/vob1fmf59evt6tr5?svg=true)](https://ci.appveyor.com/project/jviotti/resin-device-operations)
 
+Join our online chat at [![Gitter chat](https://badges.gitter.im/resin-io/chat.png)](https://gitter.im/resin-io/chat)
+
 Execute device spec operations.
 
 Role
