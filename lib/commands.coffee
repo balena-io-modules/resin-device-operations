@@ -18,6 +18,7 @@ Promise = require('bluebird')
 fs = Promise.promisifyAll(require('fs'))
 child_process = require('child_process')
 path = require('path')
+zipImage = require('resin-zip-image')
 imagefs = require('resin-image-fs')
 imageWrite = require('resin-image-write')
 
@@ -68,13 +69,21 @@ module.exports =
 			if not options?.drive?
 				throw new Error('Missing drive option')
 
-			return operation.image
-		.then(fs.statAsync).get('size')
-		.then (size) ->
-			imageReadStream = fs.createReadStream(operation.image)
+			if zipImage.isZip(operation.image)
+				if not zipImage.isValidZipImage(operation.image)
+					throw new Error('Invalid zip image')
 
-			# This is read by Resin Image Write to
-			# emit correct `progress` events.
-			imageReadStream.length ?= size
+				return zipImage.extractImage(operation.image)
 
+			else
+				return fs.statAsync(operation.image).then (stat) ->
+					imageReadStream = fs.createReadStream(operation.image)
+
+					# This is read by Resin Image Write to
+					# emit correct `progress` events.
+					imageReadStream.length ?= stat.size
+
+					return imageReadStream
+
+		.then (imageReadStream) ->
 			return imageWrite.write(options.drive, imageReadStream)

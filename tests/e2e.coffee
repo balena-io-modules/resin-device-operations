@@ -12,6 +12,11 @@ RASPBERRY_PI = path.join(__dirname, 'images', 'raspberrypi.img')
 EDISON = path.join(__dirname, 'images', 'edison-config.img')
 EDISON_ZIP = path.join(__dirname, 'images', 'edison')
 RANDOM = path.join(__dirname, 'images', 'device.random')
+EMPTY_ZIP = path.join(__dirname, 'images', 'zips', 'empty.zip')
+NO_IMAGE_ZIP = path.join(__dirname, 'images', 'zips', 'no-image.zip')
+MULTIPLE_IMAGES_ZIP = path.join(__dirname, 'images', 'zips', 'multiple-images.zip')
+RASPBERRY_PI_ONLY_ZIP = path.join(__dirname, 'images', 'zips', 'raspberrypi-only.zip')
+RASPBERRY_PI_ZIP = path.join(__dirname, 'images', 'zips', 'raspberrypi.zip')
 
 FILES =
 	'cmdline.txt': 'dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'
@@ -470,6 +475,87 @@ wary.it 'should be able to burn an image',
 			random: fse.readFileAsync(images.random)
 		.then (results) ->
 			m.chai.expect(results.random).to.deep.equal(results.raspberrypi)
+
+wary.it 'should be able to burn a zip image only containing the image',
+	raspberrypi: RASPBERRY_PI
+	zip: RASPBERRY_PI_ONLY_ZIP
+	random: RANDOM
+, (images) ->
+	configuration = operations.execute images.zip, [
+		command: 'burn'
+	],
+		drive: images.random
+
+	progressSpy = m.sinon.spy()
+	configuration.on('burn', progressSpy)
+
+	rindle.wait(configuration).then ->
+
+		fse.statAsync(images.raspberrypi).get('size').then (size) ->
+			m.chai.expect(progressSpy).to.have.been.called
+			state = progressSpy.firstCall.args[0]
+			m.chai.expect(state.length).to.not.equal(0)
+			m.chai.expect(state.length).to.equal(size)
+
+	.then ->
+		Promise.props
+			raspberrypi: fse.readFileAsync(images.raspberrypi)
+			random: fse.readFileAsync(images.random)
+		.then (results) ->
+			m.chai.expect(results.random).to.deep.equal(results.raspberrypi)
+
+wary.it 'should be able to burn a zip image containing the image and other misc files',
+	raspberrypi: RASPBERRY_PI
+	zip: RASPBERRY_PI_ZIP
+	random: RANDOM
+, (images) ->
+	configuration = operations.execute images.zip, [
+		command: 'burn'
+	],
+		drive: images.random
+
+	rindle.wait(configuration).then ->
+		Promise.props
+			raspberrypi: fse.readFileAsync(images.raspberrypi)
+			random: fse.readFileAsync(images.random)
+		.then (results) ->
+			m.chai.expect(results.random).to.deep.equal(results.raspberrypi)
+
+wary.it 'should throw if burning an empty zip',
+	zip: EMPTY_ZIP
+	random: RANDOM
+, (images) ->
+	configuration = operations.execute images.zip, [
+		command: 'burn'
+	],
+		drive: images.random
+
+	promise = rindle.wait(configuration)
+	m.chai.expect(promise).to.be.rejectedWith('Invalid zip image')
+
+wary.it 'should throw if burning a zip without any image',
+	zip: NO_IMAGE_ZIP
+	random: RANDOM
+, (images) ->
+	configuration = operations.execute images.zip, [
+		command: 'burn'
+	],
+		drive: images.random
+
+	promise = rindle.wait(configuration)
+	m.chai.expect(promise).to.be.rejectedWith('Invalid zip image')
+
+wary.it 'should throw if burning a zip with multiple images',
+	zip: MULTIPLE_IMAGES_ZIP
+	random: RANDOM
+, (images) ->
+	configuration = operations.execute images.zip, [
+		command: 'burn'
+	],
+		drive: images.random
+
+	promise = rindle.wait(configuration)
+	m.chai.expect(promise).to.be.rejectedWith('Invalid zip image')
 
 wary.it 'should set an os option automatically',
 	edison: EDISON
