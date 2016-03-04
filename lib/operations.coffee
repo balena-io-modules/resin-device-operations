@@ -37,6 +37,7 @@ action = require('./action')
 # - `state (Object state)`: When an operation is going to be executed. The state object contains the `operation` and the progress `percentage` (0-100).
 # - `stdout (String data)`: When an operation prints to stdout.
 # - `stderr (String data)`: When an operation prints to stderr.
+# - `burn (String state)`: When the `burn` operation emits progress state.
 # - `error (Error error)`: When an error happens.
 # - `end`: When all the operations are completed successfully.
 #
