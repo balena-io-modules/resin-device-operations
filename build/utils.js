@@ -14,42 +14,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
  */
-var Promise, _, os;
-
-Promise = require('bluebird');
+var _, os;
 
 os = require('os');
 
 _ = require('lodash');
-
-
-/**
- * @summary Wait for a writable stream to be closed
- * @function
- * @protected
- *
- * @param {WriteStream} stream - writable stream
- * @returns {Promise}
- *
- * @example
- * stream = fs.createReadStream('foo').pipe(fs.createWriteStream('bar'))
- * utils.waitStreamToClose(stream).then ->
- * 	console.log('The stream finished piping')
- */
-
-exports.waitStreamToClose = function(stream) {
-  return new Promise(function(resolve, reject) {
-    stream.on('error', reject);
-    stream.on('end', resolve);
-    stream.on('done', resolve);
-    return stream.on('close', function(code) {
-      if ((code != null) && code !== 0) {
-        return reject(new Error("Exitted with error code: " + code));
-      }
-      return resolve();
-    });
-  });
-};
 
 
 /**

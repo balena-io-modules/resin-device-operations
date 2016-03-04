@@ -18,11 +18,13 @@ limitations under the License.
 /**
  * @module operations
  */
-var EventEmitter, Promise, _, action, utils;
+var EventEmitter, Promise, _, action, rindle, utils;
 
 EventEmitter = require('events').EventEmitter;
 
 Promise = require('bluebird');
+
+rindle = require('rindle');
 
 _ = require('lodash');
 
@@ -147,7 +149,11 @@ exports.execute = function(image, operations, options) {
           actionEvent.on('progress', function(state) {
             return emitter.emit('burn', state);
           });
-          return utils.waitStreamToClose(actionEvent);
+          return rindle.wait(actionEvent).spread(function(code) {
+            if ((code != null) && code !== 0) {
+              throw new Error("Exitted with error code: " + code);
+            }
+          });
         });
       });
     });

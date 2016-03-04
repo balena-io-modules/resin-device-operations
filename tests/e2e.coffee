@@ -4,6 +4,7 @@ fse = Promise.promisifyAll(require('fs-extra'))
 path = require('path')
 imagefs = require('resin-image-fs')
 wary = require('wary')
+rindle = require('rindle')
 operations = require('../lib/operations')
 utils = require('../lib/utils')
 
@@ -26,13 +27,13 @@ extract = (stream) ->
 
 wary.it 'should be fulfilled if no operations', {}, ->
 	configuration = operations.execute(RASPBERRY_PI, [])
-	promise = utils.waitStreamToClose(configuration)
-	m.chai.expect(promise).to.eventually.be.undefined
+	promise = rindle.wait(configuration)
+	m.chai.expect(promise).to.be.fulfilled
 
 wary.it 'should be fulfilled if operations is undefined', {}, ->
 	configuration = operations.execute(RASPBERRY_PI)
-	promise = utils.waitStreamToClose(configuration)
-	m.chai.expect(promise).to.eventually.be.undefined
+	promise = rindle.wait(configuration)
+	m.chai.expect(promise).to.be.fulfilled
 
 wary.it 'should be fulfilled even if it finished long ago', {}, ->
 	f = ->
@@ -40,8 +41,8 @@ wary.it 'should be fulfilled even if it finished long ago', {}, ->
 		Promise.delay(1000).return(configuration)
 
 	f().then (configuration) ->
-		promise = utils.waitStreamToClose(configuration)
-		m.chai.expect(promise).to.eventually.be.undefined
+		promise = rindle.wait(configuration)
+		m.chai.expect(promise).to.be.fulfilled
 
 wary.it 'should be rejected if the command does not exist',
 	raspberrypi: RASPBERRY_PI
@@ -50,7 +51,7 @@ wary.it 'should be rejected if the command does not exist',
 		command: 'foobar'
 	]
 
-	promise = utils.waitStreamToClose(configuration)
+	promise = rindle.wait(configuration)
 	m.chai.expect(promise).to.be.rejectedWith('Unknown command: foobar')
 
 wary.it 'should be able to copy a single file between raspberry pi partitions',
@@ -69,7 +70,7 @@ wary.it 'should be able to copy a single file between raspberry pi partitions',
 			path: '/cmdline.txt'
 	]
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
 			partition:
@@ -107,7 +108,7 @@ wary.it 'should copy multiple files between raspberry pi partitions',
 			path: '/cmdline.copy'
 	]
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
 			partition:
@@ -130,7 +131,7 @@ wary.it 'should be able to replace a single file from a raspberry pi partition',
 		replace: 'lpm_enable=1'
 	]
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
 			partition:
@@ -161,7 +162,7 @@ wary.it 'should be able to perform multiple replaces in an raspberry pi partitio
 		replace: 'lpm_enable=2'
 	]
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
 			partition:
@@ -182,7 +183,7 @@ wary.it 'should be able to completely replace a file from an edison partition',
 		replace: 'Replaced!'
 	]
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.edison
 			path: '/config.json'
@@ -226,7 +227,7 @@ wary.it 'should obey when properties',
 	],
 		lpm: 2
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
 			partition:
@@ -268,7 +269,7 @@ wary.it 'should emit state events for operations',
 	stateSpy = m.sinon.spy()
 	configuration.on('state', stateSpy)
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		m.chai.expect(stateSpy.firstCall.args[0]).to.deep.equal
 			operation:
 				command: 'replace'
@@ -325,7 +326,7 @@ wary.it 'should read state events for operations after a slight delay',
 		stateSpy = m.sinon.spy()
 		configuration.on('state', stateSpy)
 
-		utils.waitStreamToClose(configuration).then ->
+		rindle.wait(configuration).then ->
 			m.chai.expect(stateSpy).to.have.been.calledOnce
 			m.chai.expect(stateSpy.firstCall.args[0]).to.deep.equal
 				operation:
@@ -355,7 +356,7 @@ wary.it 'should run a script with arguments that exits successfully', {}, ->
 	configuration.on 'stderr', (data) ->
 		stderr += data
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		m.chai.expect(stdout.replace(/\r/g, '')).to.equal('hello world\n')
 		m.chai.expect(stderr).to.equal('')
 
@@ -374,7 +375,7 @@ wary.it 'should run a script that prints to stderr', {}, ->
 	configuration.on 'stderr', (data) ->
 		stderr += data
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		m.chai.expect(stdout).to.equal('')
 		m.chai.expect(stderr.replace(/[\r\n]/g, '').trim()).to.equal('stderr output')
 
@@ -384,7 +385,7 @@ wary.it 'should be rejected if the script does not exist', {}, ->
 		script: 'foobarbaz.cmd'
 	]
 
-	promise = utils.waitStreamToClose(configuration)
+	promise = rindle.wait(configuration)
 	m.chai.expect(promise).to.be.rejectedWith('ENOENT')
 
 wary.it 'should run a script that doesn not have execution privileges', {}, ->
@@ -403,7 +404,7 @@ wary.it 'should run a script that doesn not have execution privileges', {}, ->
 	configuration.on 'stderr', (data) ->
 		stderr += data
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		m.chai.expect(stdout.replace(/\r/g, '')).to.equal('hello world\n')
 		m.chai.expect(stderr).to.equal('')
 
@@ -413,7 +414,7 @@ wary.it 'should be rejected if the script finishes with an error', {}, ->
 		script: 'error.cmd'
 	]
 
-	promise = utils.waitStreamToClose(configuration)
+	promise = rindle.wait(configuration)
 	m.chai.expect(promise).to.be.rejectedWith('Exitted with error code: 1')
 
 wary.it 'should change directory to the dirname of the script', {}, ->
@@ -431,7 +432,7 @@ wary.it 'should change directory to the dirname of the script', {}, ->
 	configuration.on 'stderr', (data) ->
 		stderr += data
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		m.chai.expect(stdout.replace(/\r/g, '')).to.equal("#{EDISON_ZIP}#{path.sep}\n")
 		m.chai.expect(stderr).to.equal('')
 
@@ -440,7 +441,7 @@ wary.it 'should be rejected if the burn operation lacks a drive option', {}, ->
 		command: 'burn'
 	]
 
-	promise = utils.waitStreamToClose(configuration)
+	promise = rindle.wait(configuration)
 	m.chai.expect(promise).to.be.rejectedWith('Missing drive option')
 
 wary.it 'should be able to burn an image',
@@ -455,7 +456,7 @@ wary.it 'should be able to burn an image',
 	progressSpy = m.sinon.spy()
 	configuration.on('burn', progressSpy)
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 
 		fse.statAsync(images.raspberrypi).get('size').then (size) ->
 			m.chai.expect(progressSpy).to.have.been.called
@@ -499,7 +500,7 @@ wary.it 'should set an os option automatically',
 				os: 'linux'
 	]
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.edison
 			path: '/config.json'
@@ -545,7 +546,7 @@ wary.it 'should allow the os option to be overrided',
 	],
 		os: 'resinos'
 
-	utils.waitStreamToClose(configuration).then ->
+	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.edison
 			path: '/config.json'

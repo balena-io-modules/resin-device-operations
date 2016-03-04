@@ -20,6 +20,7 @@ limitations under the License.
 
 EventEmitter = require('events').EventEmitter
 Promise = require('bluebird')
+rindle = require('rindle')
 _ = require('lodash')
 _.str = require('underscore.string')
 utils = require('./utils')
@@ -134,7 +135,9 @@ exports.execute = (image, operations, options = {}) ->
 					actionEvent.on 'progress', (state) ->
 						emitter.emit('burn', state)
 
-					return utils.waitStreamToClose(actionEvent)
+					return rindle.wait(actionEvent).spread (code) ->
+						if code? and code isnt 0
+							throw new Error("Exitted with error code: #{code}")
 	.then ->
 		emitter.emit('end')
 
