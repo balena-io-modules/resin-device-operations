@@ -7,68 +7,6 @@ utils = require('../lib/utils')
 
 describe 'Utils:', ->
 
-	describe '.isObjectSubset()', ->
-
-		describe 'given an object that is a subset of another object', ->
-
-			beforeEach ->
-				@object =
-					foo: 'bar'
-					bar: 'baz'
-
-				@subset =
-					foo: 'bar'
-
-			it 'should return true', ->
-				m.chai.expect(utils.isObjectSubset(@object, @subset)).to.be.true
-
-		describe 'given an object that is not a subset of another object', ->
-
-			beforeEach ->
-				@object =
-					foo: 'bar'
-					bar: 'baz'
-
-				@subset =
-					foo: 'bar'
-					bar: 'qux'
-
-			it 'should return false', ->
-				m.chai.expect(utils.isObjectSubset(@object, @subset)).to.be.false
-
-		describe 'given a non empty object and an empty subset', ->
-
-			beforeEach ->
-				@object =
-					foo: 'bar'
-					bar: 'baz'
-
-				@subset = {}
-
-			it 'should return true', ->
-				m.chai.expect(utils.isObjectSubset(@object, @subset)).to.be.true
-
-		describe 'given an empty object and an empty subset', ->
-
-			beforeEach ->
-				@object = {}
-				@subset = {}
-
-			it 'should return true', ->
-				m.chai.expect(utils.isObjectSubset(@object, @subset)).to.be.true
-
-		describe 'given an empty object and a non empty subset', ->
-
-			beforeEach ->
-				@object = {}
-
-				@subset =
-					foo: 'bar'
-					bar: 'baz'
-
-			it 'should return false', ->
-				m.chai.expect(utils.isObjectSubset(@object, @subset)).to.be.false
-
 	describe '.filterWhenMatches()', ->
 
 		describe 'given operations without a when property', ->
