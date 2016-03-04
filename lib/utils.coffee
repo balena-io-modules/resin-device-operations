@@ -18,31 +18,6 @@ os = require('os')
 _ = require('lodash')
 
 ###*
-# @summary Determine if an object is a subset of another object
-# @function
-# @protected
-#
-# @param {Object} object - source object
-# @param {Object} subset - object to determine if its a subset of the other object
-#
-# @returns {Boolean} whether the object is a subset of the other
-#
-# @example
-# utils.isObjectSubset
-# 	foo: 'bar'
-# 	bar: 'baz'
-# ,
-# 	foo: 'bar'
-# > true
-###
-exports.isObjectSubset = (object, subset) ->
-
-	# An empty object is a subset of every object
-	return true if object? and _.isEmpty(subset)
-
-	return _.findWhere([ object ], subset)?
-
-###*
 # @summary Filter operations based on when properties
 # @function
 # @protected
@@ -69,7 +44,7 @@ exports.isObjectSubset = (object, subset) ->
 ###
 exports.filterWhenMatches = (operations, options = {}) ->
 	return _.filter operations, (operation) ->
-		return exports.isObjectSubset(options, operation.when)
+		return _.isMatch(options, operation.when)
 
 ###*
 # @summary Get missing options from operations `when` properties
