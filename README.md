@@ -2,9 +2,9 @@ resin-device-operations
 -----------------------
 
 [![npm version](https://badge.fury.io/js/resin-device-operations.svg)](http://badge.fury.io/js/resin-device-operations)
-[![dependencies](https://david-dm.org/resin-io/resin-device-operations.png)](https://david-dm.org/resin-io/resin-device-operations.png)
-[![Build Status](https://travis-ci.org/resin-io/resin-device-operations.svg?branch=master)](https://travis-ci.org/resin-io/resin-device-operations)
-[![Build status](https://ci.appveyor.com/api/projects/status/vob1fmf59evt6tr5?svg=true)](https://ci.appveyor.com/project/jviotti/resin-device-operations)
+[![dependencies](https://david-dm.org/resin-io-modules/resin-device-operations.png)](https://david-dm.org/resin-io-modules/resin-device-operations.png)
+[![Build Status](https://travis-ci.org/resin-io-modules/resin-device-operations.svg?branch=master)](https://travis-ci.org/resin-io-modules/resin-device-operations)
+[![Build status](https://ci.appveyor.com/api/projects/status/vob1fmf59evt6tr5/branch/master?svg=true)](https://ci.appveyor.com/project/resin-io/resin-device-operations/branch/master)
 
 Join our online chat at [![Gitter chat](https://badges.gitter.im/resin-io/chat.png)](https://gitter.im/resin-io/chat)
 
@@ -99,7 +99,7 @@ execution.on 'end', ->
 Support
 -------
 
-If you're having any problem, please [raise an issue](https://github.com/resin-io/resin-device-operations/issues/new) on GitHub and the Resin.io team will be happy to help.
+If you're having any problem, please [raise an issue](https://github.com/resin-io-modules/resin-device-operations/issues/new) on GitHub and the Resin.io team will be happy to help.
 
 Tests
 -----
@@ -113,8 +113,8 @@ $ gulp test
 Contribute
 ----------
 
-- Issue Tracker: [github.com/resin-io/resin-device-operations/issues](https://github.com/resin-io/resin-device-operations/issues)
-- Source Code: [github.com/resin-io/resin-device-operations](https://github.com/resin-io/resin-device-operations)
+- Issue Tracker: [github.com/resin-io-modules/resin-device-operations/issues](https://github.com/resin-io-modules/resin-device-operations/issues)
+- Source Code: [github.com/resin-io-modules/resin-device-operations](https://github.com/resin-io-modules/resin-device-operations)
 
 Before submitting a PR, please make sure that you include tests, and that [coffeelint](http://www.coffeelint.org/) runs without any warning:
 
