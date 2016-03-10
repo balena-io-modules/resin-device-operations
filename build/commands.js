@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
  */
-var Promise, child_process, fs, imageWrite, imagefs, path;
+var Promise, child_process, fs, imageWrite, imagefs, path, zipImage;
 
 Promise = require('bluebird');
 
@@ -23,6 +23,8 @@ fs = Promise.promisifyAll(require('fs'));
 child_process = require('child_process');
 
 path = require('path');
+
+zipImage = require('resin-zip-image');
 
 imagefs = require('resin-image-fs');
 
@@ -66,13 +68,22 @@ module.exports = {
       if ((options != null ? options.drive : void 0) == null) {
         throw new Error('Missing drive option');
       }
-      return operation.image;
-    }).then(fs.statAsync).get('size').then(function(size) {
-      var imageReadStream;
-      imageReadStream = fs.createReadStream(operation.image);
-      if (imageReadStream.length == null) {
-        imageReadStream.length = size;
+      if (zipImage.isZip(operation.image)) {
+        if (!zipImage.isValidZipImage(operation.image)) {
+          throw new Error('Invalid zip image');
+        }
+        return zipImage.extractImage(operation.image);
+      } else {
+        return fs.statAsync(operation.image).then(function(stat) {
+          var imageReadStream;
+          imageReadStream = fs.createReadStream(operation.image);
+          if (imageReadStream.length == null) {
+            imageReadStream.length = stat.size;
+          }
+          return imageReadStream;
+        });
       }
+    }).then(function(imageReadStream) {
       return imageWrite.write(options.drive, imageReadStream);
     });
   }
