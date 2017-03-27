@@ -68,7 +68,12 @@ exports.filterWhenMatches = (operations, options = {}) ->
 # > [ 'foo' ]
 ###
 exports.getMissingOptions = (operations, options = {}) ->
-	usedOptions = _.flatten(_.map(_.pluck(operations, 'when'), _.keys))
+	usedOptions = _.flatten(
+		_.map(
+			_.map(operations, 'when'),
+			_.keys
+		)
+	)
 	return _.uniq(_.difference(usedOptions, _.keys(options)))
 
 ###*

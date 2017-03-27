@@ -30,6 +30,7 @@ Documentation
 -------------
 
 <a name="module_operations.execute"></a>
+
 ### operations.execute(image, operations, options) ⇒ <code>EventEmitter</code>
 This function returns an `EventEmitter` object that emits the following events:
 
@@ -42,7 +43,7 @@ This function returns an `EventEmitter` object that emits the following events:
 
 **Kind**: static method of <code>[operations](#module_operations)</code>  
 **Summary**: Execute a set of operations over an image  
-**Access:** public  
+**Access**: public  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -107,7 +108,7 @@ Tests
 Run the test suite by doing:
 
 ```sh
-$ gulp test
+$ npm test
 ```
 
 Contribute
