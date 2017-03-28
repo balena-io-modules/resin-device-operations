@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.4.0] - 2017-03-28
+
+### Changed
+
+- Updated dependencies to use the fixes from `etcher-image-write`.
+
 ## [1.3.1] - 2015-12-04
 
 ### Changed
@@ -71,6 +77,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - Emit `stdout`/`stderr` events for `run-script` commands instead of printing directly.
 
+[1.4.0]: https://github.com/resin-io-modules/resin-device-operations/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/resin-io-modules/resin-device-operations/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/resin-io-modules/resin-device-operations/compare/v1.2.6...v1.3.0
 [1.2.6]: https://github.com/resin-io-modules/resin-device-operations/compare/v1.2.5...v1.2.6

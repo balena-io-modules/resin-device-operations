@@ -1,6 +1,6 @@
 {
   "name": "resin-device-operations",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Execute device spec operations",
   "main": "build/operations.js",
   "homepage": "https://github.com/resin-io-modules/resin-device-operations",
