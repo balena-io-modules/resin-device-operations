@@ -15,11 +15,33 @@ limitations under the License.
 ###
 
 Promise = require('bluebird')
+_ = require('lodash')
 fs = Promise.promisifyAll(require('fs'))
 child_process = require('child_process')
 path = require('path')
 imagefs = require('resin-image-fs')
-imageWrite = require('resin-image-write')
+imageWrite = require('etcher-image-write')
+driveListAsync = Promise.promisify(require('drivelist').list)
+
+normalizeDrive = (drive) ->
+	Promise.try ->
+		if _.isObject(drive) and drive.size and drive.raw?
+			return drive
+
+		if not _.isString(drive)
+			throw new Error('Drive is not a string, nor an object with `raw` and `size` properties')
+
+
+		driveListAsync().then (drives) ->
+			return _.find(drives, device: drive)
+		.tap (foundDrive) ->
+			if not foundDrive?
+				throw new Error("Drive not found: #{drive}")
+	.then (drive) ->
+		Promise.props
+			fd: fs.openAsync(drive.raw, 'rs+')
+			device: drive.raw
+			size: drive.size
 
 module.exports =
 
@@ -60,21 +82,20 @@ module.exports =
 				stdio: [ process.stdin, 'pipe', 'pipe' ]
 
 	burn: (image, operation, options) ->
-
 		# Default image to the given path
-		operation.image ?= image
+		image = operation.image ? image
 
 		Promise.try ->
 			if not options?.drive?
 				throw new Error('Missing drive option')
 
-			return operation.image
-		.then(fs.statAsync).get('size')
-		.then (size) ->
-			imageReadStream = fs.createReadStream(operation.image)
-
-			# This is read by Resin Image Write to
-			# emit correct `progress` events.
-			imageReadStream.length ?= size
-
-			return imageWrite.write(options.drive, imageReadStream)
+			Promise.props
+				drive: normalizeDrive(options.drive)
+				imageSize: fs.statAsync(image).get('size')
+				imageStream: fs.createReadStream(image)
+		.then ({ drive, imageStream, imageSize }) ->
+			imageWrite.write drive,
+				stream: imageStream
+				size: imageSize
+			,
+				check: true

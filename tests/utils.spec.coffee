@@ -1,7 +1,6 @@
 m = require('mochainon')
 _ = require('lodash')
 os = require('os')
-Promise = require('bluebird')
 EventEmitter = require('events').EventEmitter
 utils = require('../lib/utils')
 

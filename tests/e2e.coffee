@@ -1,6 +1,6 @@
 m = require('mochainon')
 Promise = require('bluebird')
-fse = Promise.promisifyAll(require('fs-extra'))
+fs = Promise.promisifyAll(require('fs'))
 path = require('path')
 imagefs = require('resin-image-fs')
 wary = require('wary')
@@ -415,7 +415,7 @@ wary.it 'should be rejected if the script finishes with an error', {}, ->
 	]
 
 	promise = rindle.wait(configuration)
-	m.chai.expect(promise).to.be.rejectedWith('Exitted with error code: 1')
+	m.chai.expect(promise).to.be.rejectedWith('Exited with error code: 1')
 
 wary.it 'should change directory to the dirname of the script', {}, ->
 	configuration = operations.execute EDISON_ZIP, [
@@ -448,17 +448,20 @@ wary.it 'should be able to burn an image',
 	raspberrypi: RASPBERRY_PI
 	random: RANDOM
 , (images) ->
+	drive =
+		raw: images.random
+		size: fs.statSync(images.random).size
+
 	configuration = operations.execute images.raspberrypi, [
 		command: 'burn'
-	],
-		drive: images.random
+	], { drive }
 
 	progressSpy = m.sinon.spy()
 	configuration.on('burn', progressSpy)
 
 	rindle.wait(configuration).then ->
 
-		fse.statAsync(images.raspberrypi).get('size').then (size) ->
+		fs.statAsync(images.raspberrypi).get('size').then (size) ->
 			m.chai.expect(progressSpy).to.have.been.called
 			state = progressSpy.firstCall.args[0]
 			m.chai.expect(state.length).to.not.equal(0)
@@ -466,8 +469,8 @@ wary.it 'should be able to burn an image',
 
 	.then ->
 		Promise.props
-			raspberrypi: fse.readFileAsync(images.raspberrypi)
-			random: fse.readFileAsync(images.random)
+			raspberrypi: fs.readFileAsync(images.raspberrypi)
+			random: fs.readFileAsync(images.random)
 		.then (results) ->
 			m.chai.expect(results.random).to.deep.equal(results.raspberrypi)
 

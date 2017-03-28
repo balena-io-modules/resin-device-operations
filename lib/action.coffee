@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ###
 
-Promise = require('bluebird')
 _ = require('lodash')
 commands = require('./commands')
 

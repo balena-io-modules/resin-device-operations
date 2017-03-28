@@ -22,7 +22,7 @@ EventEmitter = require('events').EventEmitter
 Promise = require('bluebird')
 rindle = require('rindle')
 _ = require('lodash')
-_.str = require('underscore.string')
+_str = require('underscore.string')
 utils = require('./utils')
 action = require('./action')
 
@@ -97,7 +97,7 @@ exports.execute = (image, operations, options = {}) ->
 	missingOptions = utils.getMissingOptions(operations, options)
 
 	if not _.isEmpty(missingOptions)
-		throw new Error("Missing options: #{_.str.toSentence(missingOptions)}")
+		throw new Error("Missing options: #{_str.toSentence(missingOptions)}")
 
 	emitter = new EventEmitter()
 
@@ -137,8 +137,11 @@ exports.execute = (image, operations, options = {}) ->
 						emitter.emit('burn', state)
 
 					return rindle.wait(actionEvent).spread (code) ->
-						if code? and code isnt 0
-							throw new Error("Exitted with error code: #{code}")
+						# TODO: the number check is needed here because `rindle` is getting
+						# the `{ sourceChecksum }` response that is otherwise treated as an error code
+						# This hack is ugly and should be fixed in a better way.
+						if _.isNumber(code) and code isnt 0
+							throw new Error("Exited with error code: #{code}")
 	.then ->
 		emitter.emit('end')
 
