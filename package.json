@@ -1,6 +1,6 @@
 {
   "name": "resin-device-operations",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Execute device spec operations",
   "main": "build/operations.js",
   "homepage": "https://github.com/resin-io-modules/resin-device-operations",
@@ -43,7 +43,7 @@
   "dependencies": {
     "bluebird": "^3.5.0",
     "drivelist": "^5.0.18",
-    "etcher-image-write": "^9.0.1",
+    "etcher-image-write": "^9.0.3",
     "lodash": "^4.0.0",
     "resin-image-fs": "^2.1.0",
     "rindle": "^1.3.0",
