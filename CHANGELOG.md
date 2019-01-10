@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.4.1] - 2017-04-14
 
+## 1.4.2 - 2019-01-10
+
+* Update drivelist to ^6.4.4 [Alexis Svinartchouk]
+
 ### Fixed
 
 - Added support for node v4
