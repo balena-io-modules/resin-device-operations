@@ -138,6 +138,9 @@ exports.execute = function(image, operations, options) {
         emitter.emit('state', state);
         return promise().then(function(actionEvent) {
           var ref, ref1;
+          if (actionEvent == null) {
+            return;
+          }
           if ((ref = actionEvent.stdout) != null) {
             ref.on('data', function(data) {
               return emitter.emit('stdout', data);
