@@ -126,6 +126,8 @@ exports.execute = (image, operations, options = {}) ->
 				promise().then (actionEvent) ->
 
 					# Pipe stdout/stderr events
+					if not actionEvent?
+						return
 					actionEvent.stdout?.on 'data', (data) ->
 						emitter.emit('stdout', data)
 

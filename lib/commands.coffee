@@ -43,6 +43,18 @@ normalizeDrive = (drive) ->
 			device: drive.raw
 			size: drive.size
 
+normalizePartition = (partition) ->
+	if Number.isInteger(partition)
+		return partition
+	else
+		return partition.primary + (partition.logical || 0)
+
+normalizeDefinition = (definition) ->
+	result = Object.assign({}, definition)
+	if definition.partition?
+		result.partition = normalizePartition(definition.partition)
+	return result
+
 module.exports =
 
 	copy: (image, operation) ->
@@ -51,14 +63,14 @@ module.exports =
 		operation.from.image ?= image
 		operation.to.image ?= image
 
-		return imagefs.copy(operation.from, operation.to)
+		return imagefs.copy(normalizeDefinition(operation.from), normalizeDefinition(operation.to))
 
 	replace: (image, operation) ->
 
 		# Default image to the given path
 		operation.file.image ?= image
 
-		return imagefs.replace(operation.file, operation.find, operation.replace)
+		return imagefs.replace(normalizeDefinition(operation.file), operation.find, operation.replace)
 
 	'run-script': (image, operation) ->
 

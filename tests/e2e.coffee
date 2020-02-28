@@ -16,14 +16,15 @@ RANDOM = path.join(__dirname, 'images', 'device.random')
 FILES =
 	'cmdline.txt': 'dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'
 
-extract = (stream) ->
-	return new Promise (resolve, reject) ->
-		result = ''
-		stream.on('error', reject)
-		stream.on 'data', (chunk) ->
-			result += chunk
-		stream.on 'end', ->
-			resolve(result)
+extract = (streamDisposer) ->
+	return Promise.using streamDisposer, (stream) ->
+		return new Promise (resolve, reject) ->
+			result = ''
+			stream.on('error', reject)
+			stream.on 'data', (chunk) ->
+				result += chunk
+			stream.on 'end', ->
+				resolve(result)
 
 wary.it 'should be fulfilled if no operations', {}, ->
 	configuration = operations.execute(RASPBERRY_PI, [])
@@ -73,9 +74,7 @@ wary.it 'should be able to copy a single file between raspberry pi partitions',
 	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
-			partition:
-				primary: 4
-				logical: 1
+			partition: 5
 			path: '/cmdline.txt'
 		.then(extract)
 	.then (contents) ->
@@ -111,8 +110,7 @@ wary.it 'should copy multiple files between raspberry pi partitions',
 	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
-			partition:
-				primary: 1
+			partition: 1
 			path: '/cmdline.copy'
 		.then(extract)
 	.then (contents) ->
@@ -134,8 +132,7 @@ wary.it 'should be able to replace a single file from a raspberry pi partition',
 	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
-			partition:
-				primary: 1
+			partition: 1
 			path: '/cmdline.txt'
 		.then(extract)
 	.then (contents) ->
@@ -147,8 +144,7 @@ wary.it 'should be able to perform multiple replaces in an raspberry pi partitio
 	configuration = operations.execute images.raspberrypi, [
 		command: 'replace'
 		file:
-			partition:
-				primary: 1
+			partition: 1
 			path: '/cmdline.txt'
 		find: 'lpm_enable=0'
 		replace: 'lpm_enable=1'
@@ -165,8 +161,7 @@ wary.it 'should be able to perform multiple replaces in an raspberry pi partitio
 	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
-			partition:
-				primary: 1
+			partition: 1
 			path: '/cmdline.txt'
 		.then(extract)
 	.then (contents) ->
@@ -230,8 +225,7 @@ wary.it 'should obey when properties',
 	rindle.wait(configuration).then ->
 		imagefs.read
 			image: images.raspberrypi
-			partition:
-				primary: 1
+			partition: 1
 			path: '/cmdline.txt'
 		.then(extract)
 	.then (contents) ->
