@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.4.1] - 2017-04-14
 
+## 1.6.0 - 2020-03-03
+
+* Update dependencies [Pagan Gazzard]
+
 ## 1.5.0 - 2020-02-28
 
 * Update resin-image-fs to ^5.0.8 [Alexis Svinartchouk]
