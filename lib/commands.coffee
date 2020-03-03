@@ -21,7 +21,7 @@ child_process = require('child_process')
 path = require('path')
 imagefs = require('resin-image-fs')
 imageWrite = require('etcher-image-write')
-driveListAsync = Promise.promisify(require('drivelist').list)
+driveList = require('drivelist')
 
 normalizeDrive = (drive) ->
 	Promise.try ->
@@ -32,11 +32,11 @@ normalizeDrive = (drive) ->
 			throw new Error('Drive is not a string, nor an object with `raw` and `size` properties')
 
 
-		driveListAsync().then (drives) ->
-			return _.find(drives, device: drive)
-		.tap (foundDrive) ->
+		driveList.list().then (drives) ->
+			foundDrive = _.find(drives, device: drive)
 			if not foundDrive?
 				throw new Error("Drive not found: #{drive}")
+			return foundDrive
 	.then (drive) ->
 		Promise.props
 			fd: fs.openAsync(drive.raw, 'rs+')

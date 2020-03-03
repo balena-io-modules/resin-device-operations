@@ -22,7 +22,6 @@ EventEmitter = require('events').EventEmitter
 Promise = require('bluebird')
 rindle = require('rindle')
 _ = require('lodash')
-_str = require('underscore.string')
 utils = require('./utils')
 action = require('./action')
 
@@ -97,7 +96,7 @@ exports.execute = (image, operations, options = {}) ->
 	missingOptions = utils.getMissingOptions(operations, options)
 
 	if not _.isEmpty(missingOptions)
-		throw new Error("Missing options: #{_str.toSentence(missingOptions)}")
+		throw new Error("Missing options: #{missingOptions.join(', ')}")
 
 	emitter = new EventEmitter()
 
