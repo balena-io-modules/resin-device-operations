@@ -19,12 +19,12 @@ describe 'Operations:', ->
 		it 'should throw an error if missing both options', ->
 			m.chai.expect =>
 				operations.execute('foo.img', @operations, {})
-			.to.throw('Missing options: foo and bar')
+			.to.throw('Missing options: foo, bar')
 
 		it 'should throw an error if options is null', ->
 			m.chai.expect =>
 				operations.execute('foo.img', @operations, null)
-			.to.throw('Missing options: foo and bar')
+			.to.throw('Missing options: foo, bar')
 
 		it 'should throw an error if missing one option', ->
 			m.chai.expect =>
