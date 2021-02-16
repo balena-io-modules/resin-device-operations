@@ -19,7 +19,7 @@ _ = require('lodash')
 fs = Promise.promisifyAll(require('fs'))
 child_process = require('child_process')
 path = require('path')
-imagefs = require('resin-image-fs')
+imagefs = require('balena-image-fs')
 imageWrite = require('etcher-image-write')
 driveList = require('drivelist')
 
@@ -62,15 +62,44 @@ module.exports =
 		# Default image to the given path
 		operation.from.image ?= image
 		operation.to.image ?= image
+		fromDefinition = normalizeDefinition(operation.from)
+		toDefinition = normalizeDefinition(operation.to)
 
-		return imagefs.copy(normalizeDefinition(operation.from), normalizeDefinition(operation.to))
+		return imagefs.interact(
+			fromDefinition.image
+			fromDefinition.partition
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				return readFileAsync(fromDefinition.path)
+					.then (newContents) ->
+						return newContents.toString()
+			).then (content) ->
+				return imagefs.interact(
+					toDefinition.image
+					toDefinition.partition
+					(_fs) ->
+						Bluebird = require('bluebird')
+						writeFileAsync = Bluebird.promisify(_fs.writeFile)
+						return writeFileAsync(toDefinition.path, content)
+				)
 
 	replace: (image, operation) ->
 
 		# Default image to the given path
 		operation.file.image ?= image
+		fileDefinition = normalizeDefinition(operation.file)
 
-		return imagefs.replace(normalizeDefinition(operation.file), operation.find, operation.replace)
+		return imagefs.interact(
+			fileDefinition.image
+			fileDefinition.partition
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				writeFileAsync = Promise.promisify(_fs.writeFile)
+				return readFileAsync(fileDefinition.path)
+					.then (contents) ->
+						newContents = contents.toString().replace(operation.find, operation.replace)
+						return writeFileAsync(fileDefinition.path, newContents)
+		)
 
 	'run-script': (image, operation) ->
 
