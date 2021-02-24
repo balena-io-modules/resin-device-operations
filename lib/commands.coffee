@@ -121,6 +121,7 @@ module.exports =
 				# of using 'inherit' since the latter one is
 				# not supported in v0.10.
 				stdio: [ process.stdin, 'pipe', 'pipe' ]
+				shell: true
 
 	burn: (image, operation, options) ->
 		# Default image to the given path
