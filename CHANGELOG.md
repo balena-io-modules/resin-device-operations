@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.4.1] - 2017-04-14
 
+# v1.7.0
+## (2021-02-24)
+
+* package.json: Run npm audit fix --force [Marios Balamatsias]
+* Replace resin-image-fs methods with balena-image-fs interact [Marios Balamatsias]
+* Replace resin-image-fs with balena-image-fs [Marios Balamatsias]
+
 ## 1.6.0 - 2020-03-03
 
 * Update dependencies [Pagan Gazzard]
