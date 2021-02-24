@@ -78,8 +78,7 @@ module.exports =
 					toDefinition.image
 					toDefinition.partition
 					(_fs) ->
-						Bluebird = require('bluebird')
-						writeFileAsync = Bluebird.promisify(_fs.writeFile)
+						writeFileAsync = Promise.promisify(_fs.writeFile)
 						return writeFileAsync(toDefinition.path, content)
 				)
 
