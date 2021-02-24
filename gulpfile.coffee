@@ -22,7 +22,7 @@ gulp.task 'test', ->
 	gulp.src(OPTIONS.files.tests, read: false)
 		.pipe(mocha({
 			reporter: 'min',
-			compilers: 'coffee:coffeescript/register'
+			require: 'coffeescript/register'
 		}))
 
 gulp.task 'lint', ->

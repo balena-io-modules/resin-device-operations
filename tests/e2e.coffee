@@ -2,7 +2,7 @@ m = require('mochainon')
 Promise = require('bluebird')
 fs = Promise.promisifyAll(require('fs'))
 path = require('path')
-imagefs = require('resin-image-fs')
+imagefs = require('balena-image-fs')
 wary = require('wary')
 rindle = require('rindle')
 operations = require('../lib/operations')
@@ -72,11 +72,15 @@ wary.it 'should be able to copy a single file between raspberry pi partitions',
 	]
 
 	rindle.wait(configuration).then ->
-		imagefs.read
-			image: images.raspberrypi
-			partition: 5
-			path: '/cmdline.txt'
-		.then(extract)
+		imagefs.interact(
+			images.raspberrypi
+			5
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				return readFileAsync('/cmdline.txt')
+					.then (b) ->
+						return b.toString()
+		)
 	.then (contents) ->
 		m.chai.expect(contents).to.equal(FILES['cmdline.txt'])
 
@@ -108,11 +112,15 @@ wary.it 'should copy multiple files between raspberry pi partitions',
 	]
 
 	rindle.wait(configuration).then ->
-		imagefs.read
-			image: images.raspberrypi
-			partition: 1
-			path: '/cmdline.copy'
-		.then(extract)
+		imagefs.interact(
+			images.raspberrypi
+			1
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				return readFileAsync('/cmdline.copy')
+					.then (b) -> 
+						return b.toString()
+		)
 	.then (contents) ->
 		m.chai.expect(contents).to.equal(FILES['cmdline.txt'])
 
@@ -130,11 +138,15 @@ wary.it 'should be able to replace a single file from a raspberry pi partition',
 	]
 
 	rindle.wait(configuration).then ->
-		imagefs.read
-			image: images.raspberrypi
-			partition: 1
-			path: '/cmdline.txt'
-		.then(extract)
+		imagefs.interact(
+			images.raspberrypi
+			1
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				return readFileAsync('/cmdline.txt')
+					.then (b) -> 
+						return b.toString()
+		)
 	.then (contents) ->
 		m.chai.expect(contents).to.equal('dwc_otg.lpm_enable=1 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n')
 
@@ -159,11 +171,15 @@ wary.it 'should be able to perform multiple replaces in an raspberry pi partitio
 	]
 
 	rindle.wait(configuration).then ->
-		imagefs.read
-			image: images.raspberrypi
-			partition: 1
-			path: '/cmdline.txt'
-		.then(extract)
+		imagefs.interact(
+			images.raspberrypi
+			1
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				return readFileAsync('/cmdline.txt')
+					.then (b) -> 
+						return b.toString()
+		)
 	.then (contents) ->
 		m.chai.expect(contents).to.equal('dwc_otg.lpm_enable=2 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n')
 
@@ -179,10 +195,15 @@ wary.it 'should be able to completely replace a file from an edison partition',
 	]
 
 	rindle.wait(configuration).then ->
-		imagefs.read
-			image: images.edison
-			path: '/config.json'
-		.then(extract)
+		imagefs.interact(
+			images.edison
+			undefined
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				return readFileAsync('/config.json')
+					.then (b) -> 
+						return b.toString()
+		)
 	.then (contents) ->
 		m.chai.expect(contents).to.equal('Replaced!')
 
@@ -223,11 +244,15 @@ wary.it 'should obey when properties',
 		lpm: 2
 
 	rindle.wait(configuration).then ->
-		imagefs.read
-			image: images.raspberrypi
-			partition: 1
-			path: '/cmdline.txt'
-		.then(extract)
+		imagefs.interact(
+			images.raspberrypi
+			1
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				return readFileAsync('/cmdline.txt')
+					.then (b) -> 
+						return b.toString()
+		)
 	.then (contents) ->
 		m.chai.expect(contents).to.equal('dwc_otg.lpm_enable=2 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n')
 
@@ -498,10 +523,15 @@ wary.it 'should set an os option automatically',
 	]
 
 	rindle.wait(configuration).then ->
-		imagefs.read
-			image: images.edison
-			path: '/config.json'
-		.then(extract)
+		imagefs.interact(
+			images.edison
+			undefined
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				return readFileAsync('/config.json')
+					.then (b) -> 
+						return b.toString()
+		)
 	.then (contents) ->
 		m.chai.expect(contents).to.equal(utils.getOperatingSystem())
 
@@ -544,10 +574,15 @@ wary.it 'should allow the os option to be overrided',
 		os: 'resinos'
 
 	rindle.wait(configuration).then ->
-		imagefs.read
-			image: images.edison
-			path: '/config.json'
-		.then(extract)
+		imagefs.interact(
+			images.edison
+			undefined
+			(_fs) ->
+				readFileAsync = Promise.promisify(_fs.readFile)
+				return readFileAsync('/config.json')
+					.then (b) -> 
+						return b.toString()
+		)
 	.then (contents) ->
 		m.chai.expect(contents).to.equal('resinos')
 
