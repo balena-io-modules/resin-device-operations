@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.4.1] - 2017-04-14
 
+# v1.7.1
+## (2021-03-12)
+
+* Bump drivelist @ 9.2.4 [Marios Balamatsias]
+
 # v1.7.0
 ## (2021-02-24)
 
