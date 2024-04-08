@@ -15,15 +15,15 @@ limitations under the License.
 ###
 
 Promise = require('bluebird')
+EventEmitter = require('events').EventEmitter
 _ = require('lodash')
 fs = Promise.promisifyAll(require('fs'))
 child_process = require('child_process')
 path = require('path')
 imagefs = require('balena-image-fs')
-imageWrite = require('etcher-image-write')
-driveList = require('drivelist')
+sdk = require('etcher-sdk')
 
-normalizeDrive = (drive) ->
+getDrive = (drive) ->
 	Promise.try ->
 		if _.isObject(drive) and drive.size and drive.raw?
 			return drive
@@ -31,17 +31,21 @@ normalizeDrive = (drive) ->
 		if not _.isString(drive)
 			throw new Error('Drive is not a string, nor an object with `raw` and `size` properties')
 
-
-		driveList.list().then (drives) ->
-			foundDrive = _.find(drives, device: drive)
-			if not foundDrive?
-				throw new Error("Drive not found: #{drive}")
-			return foundDrive
-	.then (drive) ->
-		Promise.props
-			fd: fs.openAsync(drive.raw, 'rs+')
-			device: drive.raw
-			size: drive.size
+		adapter = new sdk.scanner.adapters.BlockDeviceAdapter({
+			includeSystemDrives: () => false,
+			unmountOnSuccess: false,
+			write: true,
+			direct: true,
+		});
+		scanner = new sdk.scanner.Scanner([adapter]);
+		scanner.start().then ->
+			try
+				d = scanner.getBy('device', drive);
+				if d == undefined || !(d instanceof sdk.sourceDestination.BlockDevice)
+					throw new Error("Drive not found: #{drive}")
+				return d
+			finally
+				scanner.stop()
 
 normalizePartition = (partition) ->
 	if Number.isInteger(partition)
@@ -125,18 +129,51 @@ module.exports =
 	burn: (image, operation, options) ->
 		# Default image to the given path
 		image = operation.image ? image
+		emitter = new EventEmitter()
 
 		Promise.try ->
 			if not options?.drive?
 				throw new Error('Missing drive option')
 
+			file = new sdk.sourceDestination.File({
+				path: image
+			})
 			Promise.props
-				drive: normalizeDrive(options.drive)
-				imageSize: fs.statAsync(image).get('size')
-				imageStream: fs.createReadStream(image)
-		.then ({ drive, imageStream, imageSize }) ->
-			imageWrite.write drive,
-				stream: imageStream
-				size: imageSize
-			,
-				check: true
+				drive: getDrive(options.drive)
+				source: file.getInnerSource()
+		.then ({ drive, source }) ->
+			start = Date.now()
+			progressState = {
+				transferred: 0
+			}
+			sdk.multiWrite.pipeSourceToDestinations({
+				source,
+				destinations: [drive],
+				onFail: (_, error) -> emitter.emit('error', error)
+				onProgress: (progress) ->
+					type = null
+					if progress.type == 'flashing'
+						type = 'write'
+					if progress.type == 'verifying'
+						type = 'check'
+					if not type?
+						return
+
+					progress.type = type
+					progressState = {
+						type: type
+						percentage: progress.percentage
+						transferred: progress.position
+						length: progress.bytes
+						remaining: progress.bytes - progress.position
+						eta: progress.eta
+						runtime: Date.now() - start
+						delta: progress.position - progressState.transferred
+						speed: progress.speed
+					}
+					emitter.emit('progress', progressState)
+				verify: true,
+			}).then ->
+				emitter.emit('end')
+
+			emitter

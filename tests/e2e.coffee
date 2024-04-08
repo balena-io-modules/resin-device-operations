@@ -7,6 +7,7 @@ wary = require('wary')
 rindle = require('rindle')
 operations = require('../lib/operations')
 utils = require('../lib/utils')
+sdk = require('etcher-sdk')
 
 RASPBERRY_PI = path.join(__dirname, 'images', 'raspberrypi.img')
 EDISON = path.join(__dirname, 'images', 'edison-config.img')
@@ -463,13 +464,51 @@ wary.it 'should be rejected if the burn operation lacks a drive option', {}, ->
 	promise = rindle.wait(configuration)
 	m.chai.expect(promise).to.be.rejectedWith('Missing drive option')
 
+mockBlockDeviceFromFile = (path) ->
+	drive = {
+		raw: path,
+		device: path,
+		devicePath: path,
+		displayName: path,
+		icon: 'some icon',
+		isSystem: false,
+		description: 'some description',
+		mountpoints: [],
+		size: fs.statSync(path).size,
+		isReadOnly: false,
+		busType: 'UNKNOWN',
+		error: null,
+		blockSize: 512,
+		busVersion: null,
+		enumerator: 'fake',
+		isCard: null,
+		isRemovable: true,
+		isSCSI: false,
+		isUAS: null,
+		isUSB: true,
+		isVirtual: false,
+		logicalBlockSize: 512,
+		partitionTableType: null,
+	};
+	device = new sdk.sourceDestination.BlockDevice({
+		drive,
+		unmountOnSuccess: false,
+		write: true,
+		direct: false,
+	})
+
+	device._open = () ->
+		sdk.sourceDestination.File.prototype._open.call(device)
+	device._close = () ->
+		sdk.sourceDestination.File.prototype._close.call(device)
+
+	device
+
 wary.it 'should be able to burn an image',
 	raspberrypi: RASPBERRY_PI
 	random: RANDOM
 , (images) ->
-	drive =
-		raw: images.random
-		size: fs.statSync(images.random).size
+	drive = mockBlockDeviceFromFile(images.random)
 
 	configuration = operations.execute images.raspberrypi, [
 		command: 'burn'
