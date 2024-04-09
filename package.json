@@ -1,6 +1,6 @@
 {
   "name": "resin-device-operations",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "description": "Execute device spec operations",
   "main": "build/operations.js",
   "homepage": "https://github.com/resin-io-modules/resin-device-operations",
@@ -49,5 +49,8 @@
     "etcher-sdk": "9.0.8",
     "lodash": "^4.17.15",
     "rindle": "^1.3.0"
+  },
+  "versionist": {
+    "publishedAt": "2024-04-09T13:46:05.747Z"
   }
 }

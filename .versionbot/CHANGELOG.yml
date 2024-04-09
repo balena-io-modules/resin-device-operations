@@ -1,0 +1,114 @@
+- commits:
+    - subject: Replace etcher-image-write & drivelist with etcher-sdk
+      hash: 9e1f229866b49aa264f16ea014a7b7fb1b4b3635
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Thodoris Greasidis
+    - subject: Drop support for node < 18
+      hash: 451140639d673ba727dacd157d5e72d1de32f348
+      body: ""
+      footer:
+        Change-type: major
+        change-type: major
+      author: Thodoris Greasidis
+    - subject: Replace balenaCI with flowzone
+      hash: d6cf826f2d8856f70923acdc003553e1c35f394f
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Thodoris Greasidis
+  version: 2.0.0
+  title: ""
+  date: 2024-04-09T13:46:05.695Z
+- version: 1.7.0
+  date: 2021-02-24T16:52:18Z
+  commits:
+    - hash: a76a0333d1f0311674e4b6c2bb4b173a17a4534f
+      author: Marios Balamatsias
+      footers:
+        change-type: minor
+        signed-off-by: Marios Balamatsias <mbalamatsias@gmail.com>
+      subject: Replace resin-image-fs with balena-image-fs
+      body: ""
+    - hash: 3fd733effacba0f0acd487dde18f93f8c0f20d8c
+      author: Marios Balamatsias
+      footers:
+        connects-to: https://github.com/balena-io/balena-cli/issues/2079
+        change-type: patch
+        signed-off-by: Marios Balamatsias <mbalamatsias@gmail.com>
+      subject: Replace resin-image-fs methods with balena-image-fs interact
+      body: ""
+    - hash: b2f052b020803594104d064b47174fa73f1194f5
+      author: Marios Balamatsias
+      footers:
+        change-type: patch
+        signed-off-by: Marios Balamatsias <mbalamatsias@gmail.com>
+      subject: "package.json: Run npm audit fix --force"
+      body: Fix gulp test task, more info
+        https://github.com/mochajs/mocha/wiki/compilers-deprecation
+    - hash: 44a226c6d8f2dde2c174c50c3175294a9b0065b8
+      author: Marios Balamatsias
+      footers:
+        signed-off-by: Marios Balamatsias <mbalamatsias@gmail.com>
+      subject: "commands: Spawn process with shell:true"
+      body: ""
+    - hash: 52afea64bbb46359276766f7c2f748245a0ed69e
+      author: Marios Balamatsias
+      footers:
+        signed-off-by: Marios Balamatsias <mbalamatsias@gmail.com>
+      subject: Remove unnecessary bluebird import
+      body: ""
+- version: 1.6.0
+  date: 2020-03-03T17:11:54Z
+  commits:
+    - hash: 1eb71d1da5ccdcc7af851fd7f3fa6ca031a8aedb
+      author: Pagan Gazzard
+      footers:
+        change-type: minor
+      subject: Update dependencies
+      body: ""
+- version: 1.5.0
+  date: 2020-02-28T17:54:32Z
+  commits:
+    - hash: dc2ddbaa0df332575bd3e43f098ca3d111d28d5a
+      author: Alexis Svinartchouk
+      footers:
+        change-type: patch
+      subject: Update gulp to ^4
+      body: ""
+    - hash: 4ef0b791821db852624eacaa25e6dea9b3ad8522
+      author: Alexis Svinartchouk
+      footers:
+        change-type: minor
+      subject: Update resin-image-fs to ^5.0.8
+      body: ""
+- version: 1.4.2
+  date: 2019-01-10T17:53:59Z
+  commits:
+    - hash: 85f24f8f58eb1ad8882cf7688eb37e65fc63394e
+      author: Alexis Svinartchouk
+      footers:
+        change-type: patch
+      subject: Update drivelist to ^6.4.4
+      body: ""
+- version: 1.4.1
+  date: 2017-04-14T08:32:15Z
+  commits:
+    - hash: 3eaffc4ba83fd06229267cab51f09b1069300a9a
+      author: Eugene Mirotin
+      subject: node v4 support
+      body: ""
+- version: 1.4.0
+  date: 2017-03-28T09:46:08Z
+  commits:
+    - hash: d01331484fce2f13424e2c4e2009416bff794273
+      author: Eugene Mirotin
+      subject: "update dependencies, including:"
+      body: |-
+        * etcher-image-write@^9
+        * bluebird@^3
+        * lodash@^4
+        drop old node support, test on v6 and the most recent stable

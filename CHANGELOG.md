@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.4.1] - 2017-04-14
 
+# v2.0.0
+## (2024-04-09)
+
+* Replace etcher-image-write & drivelist with etcher-sdk [Thodoris Greasidis]
+* Drop support for node < 18 [Thodoris Greasidis]
+* Replace balenaCI with flowzone [Thodoris Greasidis]
+
 # v1.7.0
 ## (2021-02-24)
 
