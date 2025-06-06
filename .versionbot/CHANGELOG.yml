@@ -1,4 +1,23 @@
 - commits:
+    - subject: Bump etcher-sdk to v10.0.0
+      hash: d91de0613eec00aab75c64f317c5ab1752ae46bd
+      body: |
+        Update etcher-sdk from v9.0.8 to v10.0.0
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Otavio Jacobi
+    - subject: Drop support to node 18
+      hash: 36fff2dc5f9db7c87fdd645de1cac54eb6fabe27
+      body: ""
+      footer:
+        Change-type: major
+        change-type: major
+      author: Otavio Jacobi
+  version: 3.0.0
+  title: ""
+  date: 2025-06-06T18:28:28.026Z
+- commits:
     - subject: Replace etcher-image-write & drivelist with etcher-sdk
       hash: 9e1f229866b49aa264f16ea014a7b7fb1b4b3635
       body: ""
