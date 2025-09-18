@@ -8,8 +8,8 @@ import path from 'path';
 import * as imagefs from 'balena-image-fs';
 import wary from 'wary';
 import rindle from 'rindle';
-import operations from '../build/operations';
-import utils from '../build/utils';
+import * as operations from '../build/operations';
+import * as utils from '../build/utils';
 import * as sdk from 'etcher-sdk';
 
 const RASPBERRY_PI = path.join(__dirname, 'images', 'raspberrypi.img');
@@ -599,7 +599,7 @@ wary.it(
 	},
 );
 
-const mockBlockDeviceFromFile = async function (filepath) {
+const mockBlockDeviceFromFile = async function (filepath: string) {
 	const drive = {
 		raw: filepath,
 		device: filepath,

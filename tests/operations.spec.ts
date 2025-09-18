@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import operations from '../build/operations';
+import * as operations from '../build/operations';
 
 describe('Operations:', () =>
 	describe('given a multiple command operation', function () {

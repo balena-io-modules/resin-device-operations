@@ -22,8 +22,8 @@
   },
   "scripts": {
     "test": "npm run build && npm run lint && mocha -r ts-node/register/transpile-only --reporter spec tests/**/*.spec.ts",
-    "build": "gulp build",
-    "prepare": "npm run build",
+    "test:fast": "npm run lint-fix; npm run build && mocha -r ts-node/register/transpile-only --reporter spec tests/**/*.spec.ts",
+    "build": "tsc --project tsconfig.dist.json",
     "lint": "balena-lint -e ts lib tests",
     "lint-fix": "balena-lint -e ts lib tests --fix",
     "readme": "jsdoc2md --template doc/README.hbs build/operations.js > README.md"
@@ -43,12 +43,6 @@
     "@types/sinon": "^17.0.3",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
-    "coffeescript": "^1.12.7",
-    "gulp": "^4.0.2",
-    "gulp-coffee": "^2.3.5",
-    "gulp-coffeelint": "^0.6.0",
-    "gulp-mocha": "^8.0.0",
-    "gulp-util": "^3.0.8",
     "jsdoc-to-markdown": "^9.0.0",
     "mocha": "^11.0.0",
     "sinon": "^19.0.0",
@@ -61,7 +55,8 @@
     "bluebird": "^3.7.2",
     "etcher-sdk": "^10.0.0",
     "lodash": "^4.17.15",
-    "rindle": "^1.3.0"
+    "rindle": "^1.3.0",
+    "tslib": "^2.8.1"
   },
   "versionist": {
     "publishedAt": "2025-09-22T23:05:24.789Z"

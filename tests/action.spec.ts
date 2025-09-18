@@ -2,8 +2,8 @@ import Promise from 'bluebird';
 import { expect, use as chaiUse } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chaiUse(chaiAsPromised);
-import action from '../build/action';
-import commands from '../build/commands';
+import * as action from '../build/action';
+import { commands } from '../build/commands';
 
 describe('Command:', function () {
 	describe('.getOperationProgress()', () =>

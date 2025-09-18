@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const os = require('os');
-const _ = require('lodash');
+import os from 'os';
+import * as _ from 'lodash';
+import type { Operation } from './commands';
 
 /**
  * @summary Filter operations based on when properties
@@ -31,20 +32,27 @@ const _ = require('lodash');
  * @returns {Object[]} filtered operations
  *
  * @example
- * operations = utils.filterWhenMatches [
- * 	command: 'foo'
- * 	when:
- * 		name: 'john'
- * ,
- * 	command: 'bar'
- * 	when:
- * 		name: 'jane'
- * ],
- * 	name: 'john'
+ * const operations = utils.filterWhenMatches(
+ * 	[
+ * 		{
+ * 			command: 'foo',
+ * 			when: {
+ * 				name: 'john',
+ * 			},
+ * 		},
+ * 		{
+ * 			command: 'bar',
+ * 			when: {
+ * 				name: 'jane',
+ * 			},
+ * 		},
+ * 	],
+ * 	{ name: 'john'},
+ * );
  */
-exports.filterWhenMatches = function(operations, options) {
-	if (options == null) { options = {}; }
-	return _.filter(operations, operation => _.isMatch(options, operation.when));
+export const filterWhenMatches = function(operations: Operation[], options: object) {
+	options ??= {};
+	return _.filter(operations, operation => operation.when == null || _.isMatch(options, operation.when));
 };
 
 /**
@@ -58,18 +66,21 @@ exports.filterWhenMatches = function(operations, options) {
  * @returns {String[]} missing options
  *
  * @example
- * missingOptions = utils.getMissingOptions [
- * 	command: 'foo'
- * 	when:
- * 		foo: 1
- * ],
- * 	bar: 2
+ * const missingOptions = utils.getMissingOptions(
+ * 	[{
+ * 		command: 'foo',
+ * 		when: {
+ * 			foo: 1
+ * 		}
+ * 	}],
+ * 	{ bar: 2 },
+ * );
  *
- * console.log(missingOptions)
+ * console.log(missingOptions);
  * > [ 'foo' ]
  */
-exports.getMissingOptions = function(operations, options) {
-	if (options == null) { options = {}; }
+export const getMissingOptions = function(operations: Operation[], options: object) {
+	options ??= {};
 	const usedOptions = _.flatten(
 		_.map(
 			_.map(operations, 'when'),
@@ -87,9 +98,9 @@ exports.getMissingOptions = function(operations, options) {
  * @returns {String} operating system
  *
  * @example
- * os = utils.getOperatingSystem()
+ * const os = utils.getOperatingSystem();
  */
-exports.getOperatingSystem = function() {
+export const getOperatingSystem = function() {
 	const platform = os.platform();
 
 	switch (platform) {

@@ -14,71 +14,118 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const Promise = require('bluebird');
-const {
-    EventEmitter
-} = require('events');
-const _ = require('lodash');
-const fs = Promise.promisifyAll(require('fs'));
-const child_process = require('child_process');
-const path = require('path');
-const imagefs = require('balena-image-fs');
-const sdk = require('etcher-sdk');
+import Promise from 'bluebird';
+import { EventEmitter } from 'events';
+import * as _ from 'lodash';
+import fs from 'fs/promises';
+import child_process from 'child_process';
+import path from 'path';
+import * as imagefs from 'balena-image-fs';
+import * as sdk from 'etcher-sdk';
+import type { AdapterSourceDestination } from 'etcher-sdk/build/scanner/adapters';
 
-const getDrive = drive => Promise.try(function() {
-    if (_.isObject(drive) && drive.size && (drive.raw != null)) {
-        return drive;
-    }
+const getDrive = (drive: AdapterSourceDestination | string) => Promise.try(function() {
+	if (_.isObject(drive) && drive.size && (drive.raw != null)) {
+		return drive;
+	}
 
-    if (!_.isString(drive)) {
-        throw new Error('Drive is not a string, nor an object with `raw` and `size` properties');
-    }
+	if (!_.isString(drive)) {
+		throw new Error('Drive is not a string, nor an object with `raw` and `size` properties');
+	}
 
-    const adapter = new sdk.scanner.adapters.BlockDeviceAdapter({
-        includeSystemDrives: () => false,
-        unmountOnSuccess: false,
-        write: true,
-        direct: true,
-    });
-    const scanner = new sdk.scanner.Scanner([adapter]);
-    return scanner.start().then(function() {
-        try {
-            const d = scanner.getBy('device', drive);
-            if ((d === undefined) || !(d instanceof sdk.sourceDestination.BlockDevice)) {
-                throw new Error(`Drive not found: ${drive}`);
-            }
-            return d;
-        } finally {
-            scanner.stop();
-        }
-    });
+	const adapter = new sdk.scanner.adapters.BlockDeviceAdapter({
+		includeSystemDrives: () => false,
+		unmountOnSuccess: false,
+		write: true,
+		direct: true,
+	});
+	const scanner = new sdk.scanner.Scanner([adapter]);
+	return scanner.start().then(function() {
+		try {
+			const d = scanner.getBy('device', drive);
+			if ((d === undefined) || !(d instanceof sdk.sourceDestination.BlockDevice)) {
+				throw new Error(`Drive not found: ${drive}`);
+			}
+			return d;
+		} finally {
+			scanner.stop();
+		}
+	});
 });
 
-const normalizePartition = function(partition) {
-	if (Number.isInteger(partition)) {
+const normalizePartition = function(partition: NonNullable<DeviceTypeConfigurationConfig['partition']>) {
+	if (typeof partition === 'number') {
 		return partition;
 	} else {
-		return partition.primary + (partition.logical || 0);
+		return partition.primary + (partition.logical ?? 0);
 	}
 };
 
-const normalizeDefinition = function(definition) {
-	const result = Object.assign({}, definition);
-	if (definition.partition != null) {
-		result.partition = normalizePartition(definition.partition);
-	}
+const normalizeDefinition = function<T extends DeviceTypeConfigurationConfig>(definition: T) {
+	const result = {
+		...definition,
+		...(definition.partition != null && {
+			partition: normalizePartition(definition.partition)
+		})
+	};
 	return result;
 };
 
-module.exports = {
+export interface Operation {
+	command: string;
+	when?: object;
+}
 
-	copy(image, operation) {
+export interface DeviceTypeConfigurationConfig {
+	/** eg "/config.json" */
+	path: string;
+	/** Only the intel-edison does NOT have this defined */
+	partition?: number | {
+		primary: number;
+		logical?: number;
+	};
+	/** I only found this in the intel-edison eg "my/rpi.img" */
+	image?: string;
+}
 
+export type DeviceTypeConfigurationConfigWithImage = DeviceTypeConfigurationConfig & Required<Pick<DeviceTypeConfigurationConfig, 'image'>>
+
+export interface CopyOperation extends Operation {
+	command: 'copy';
+	from: DeviceTypeConfigurationConfig;
+	to: DeviceTypeConfigurationConfig;
+}
+
+export interface ReplaceOperation extends Operation {
+	command: 'replace';
+	copy: string;
+	find: string;
+	replace: string;
+	file: {
+		path: string;
+		// Set by commands
+		image?: string;
+	};
+}
+
+export interface RunScriptOperation extends Operation {
+	command: 'run-script';
+	script: string;
+	arguments?: string[];
+}
+
+export interface BurnOperation extends Operation {
+	command: 'burn';
+	image?: string;
+}
+
+export const commands = {
+	copy(image: string, operation: CopyOperation) {
 		// Default image to the given path
-		if (operation.from.image == null) { operation.from.image = image; }
-		if (operation.to.image == null) { operation.to.image = image; }
-		const fromDefinition = normalizeDefinition(operation.from);
-		const toDefinition = normalizeDefinition(operation.to);
+		operation.from.image ??= image;
+		operation.to.image ??= image;
+		const fromDefinition = normalizeDefinition(operation.from as typeof operation.from & Required<Pick<typeof operation.from, 'image'>>);
+		const toDefinition = normalizeDefinition(operation.to as typeof operation.to & Required<Pick<typeof operation.to, 'image'>>);
 
 		return imagefs.interact(
 			fromDefinition.image,
@@ -88,19 +135,18 @@ module.exports = {
 				return readFileAsync(fromDefinition.path)
 					.then(newContents => newContents.toString());
 			}).then(content => imagefs.interact(
-            toDefinition.image,
-            toDefinition.partition,
-            function(_fs) {
-                const writeFileAsync = Promise.promisify(_fs.writeFile);
-                return writeFileAsync(toDefinition.path, content);
-        }));
+			toDefinition.image,
+			toDefinition.partition,
+			function(_fs) {
+				const writeFileAsync = Promise.promisify(_fs.writeFile);
+				return writeFileAsync(toDefinition.path, content);
+		}));
 	},
 
-	replace(image, operation) {
-
+	replace(image: string, operation: ReplaceOperation) {
 		// Default image to the given path
-		if (operation.file.image == null) { operation.file.image = image; }
-		const fileDefinition = normalizeDefinition(operation.file);
+		operation.file.image ??= image;
+		const fileDefinition = normalizeDefinition(operation.file as typeof operation.file & Required<Pick<typeof operation.file, 'image'>>);
 
 		return imagefs.interact(
 			fileDefinition.image,
@@ -115,13 +161,13 @@ module.exports = {
 		});
 	},
 
-	'run-script'(image, operation) {
+	'run-script'(image: string, operation: RunScriptOperation) {
 
 		operation.script = path.join(image, operation.script);
-		if (operation.arguments == null) { operation.arguments = []; }
+		const operationArguments = operation.arguments ??= [];
 
-		return fs.chmodAsync(operation.script, 0o755).then(function() {
-			return child_process.spawn(operation.script, operation.arguments, {
+		return fs.chmod(operation.script, 0o755).then(function() {
+			return child_process.spawn(operation.script, operationArguments , {
 
 				// Some scripts rely on other executable
 				// files within the same directory
@@ -141,13 +187,13 @@ module.exports = {
 		});
 	},
 
-	burn(image, operation, options) {
+	burn(image: string, operation: BurnOperation, options?: { drive: AdapterSourceDestination | string }) {
 		// Default image to the given path
-		image = operation.image != null ? operation.image : image;
+		image = operation.image ?? image;
 		const emitter = new EventEmitter();
 
 		return Promise.try(function() {
-			if (((options != null ? options.drive : undefined) == null)) {
+			if (((options?.drive) == null)) {
 				throw new Error('Missing drive option');
 			}
 
@@ -159,27 +205,25 @@ module.exports = {
 				source: file.getInnerSource()
 			});}).then(function({ drive, source }) {
 			const start = Date.now();
-			let progressState = {
-				transferred: 0
-			};
-			sdk.multiWrite.pipeSourceToDestinations({
+			let transferred = 0;
+			void sdk.multiWrite.pipeSourceToDestinations({
 				source,
 				destinations: [drive],
-				onFail(_, error) { return emitter.emit('error', error); },
+				onFail(_dest, error) { return emitter.emit('error', error); },
 				onProgress(progress) {
 					let type = null;
 					if (progress.type === 'flashing') {
-						type = 'write';
+						type = 'write' as const;
 					}
 					if (progress.type === 'verifying') {
-						type = 'check';
+						type = 'check' as const;
 					}
 					if ((type == null)) {
 						return;
 					}
 
-					progress.type = type;
-					progressState = {
+					progress.type = type as typeof progress.type;
+					const progressState = {
 						type,
 						percentage: progress.percentage,
 						transferred: progress.position,
@@ -187,9 +231,10 @@ module.exports = {
 						remaining: progress.bytes - progress.position,
 						eta: progress.eta,
 						runtime: Date.now() - start,
-						delta: progress.position - progressState.transferred,
+						delta: progress.position - transferred,
 						speed: progress.speed
 					};
+					transferred = progressState.transferred;
 					return emitter.emit('progress', progressState);
 				},
 				verify: true,

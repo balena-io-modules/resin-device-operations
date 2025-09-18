@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import os from 'os';
-import utils from '../build/utils';
+import * as utils from '../build/utils';
 
 describe('Utils:', function () {
 	describe('.filterWhenMatches()', function () {

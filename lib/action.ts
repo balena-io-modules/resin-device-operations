@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const _ = require('lodash');
-const commands = require('./commands');
+import * as _ from 'lodash';
+import { commands, type Operation } from './commands';
 
 /**
  * @summary Get percentage progress of an operation
@@ -28,18 +28,25 @@ const commands = require('./commands');
  * @returns {Number} percentage from 0-100
  *
  * @example
- * percentage = action.getOperationProgress 0, [
- * 	command: 'copy'
- * 	...
- * ,
- * 	command: 'replace'
- * 	...
- * ,
- * 	command: 'copy'
- * 	...
- * ]
+ * const percentage = action.getOperationProgress(
+ * 	0,
+ * 	[
+ * 		{
+ * 			command: 'copy',
+ * 			// ...
+ * 		},
+ * 		{
+ * 			command: 'replace',
+ * 			// ...
+ * 		},
+ * 		{
+ * 			command: 'copy',
+ * 			// ...
+ * 		},
+ * 	],
+ * );
  */
-exports.getOperationProgress = function(index, operations) {
+export const getOperationProgress = function(index: number, operations: Operation[]) {
 	const progress = ((index + 1) / operations.length) * 100;
 	return parseFloat(progress.toFixed(1));
 };
@@ -55,20 +62,25 @@ exports.getOperationProgress = function(index, operations) {
  * @returns {Promise}
  *
  * @example
- * action.run 'foo/bar',
- * 	command: 'copy'
- * 	from:
- * 		partition:
+ * action.run('foo/bar', {
+ * 	command: 'copy',
+ * 	from: {
+ * 		partition: {
  * 			primary: 1
- * 		path: '/foo'
- * 	to:
- * 		partition:
- * 			primary: 4
+ * 		},
+ * 		path: '/foo',
+ * 	},
+ * 	to: {
+ * 		partition: {
+ * 			primary: 4,
  * 			logical: 1
- * 		path: '/bar'
+ * 		},
+ * 		path: '/bar',
+ * 	},
+ * });
  */
-exports.run = function(image, operation, options) {
-	const action = commands[operation.command];
+export const run = function(image: string, operation: Operation, options: object) {
+	const action = commands[operation.command as keyof typeof commands];
 
 	if ((action == null)) {
 		throw new Error(`Unknown command: ${operation.command}`);
