@@ -21,7 +21,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "gulp test && coffee tests/e2e.coffee",
+    "test": "npm run build && mocha -r ts-node/register/transpile-only --reporter spec tests/**/*.spec.ts",
     "build": "gulp build",
     "prepare": "npm run build",
     "readme": "jsdoc2md --template doc/README.hbs build/operations.js > README.md"
@@ -32,15 +32,25 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.42",
+    "@types/chai": "^4.3.3",
+    "@types/chai-as-promised": "^7.1.5",
+    "@types/lodash": "^4.17.20",
+    "@types/mocha": "^10.0.1",
+    "@types/sinon": "^17.0.3",
+    "chai": "^4.3.6",
+    "chai-as-promised": "^7.1.1",
     "coffeescript": "^1.12.7",
     "gulp": "^4.0.2",
     "gulp-coffee": "^2.3.5",
     "gulp-coffeelint": "^0.6.0",
     "gulp-mocha": "^8.0.0",
     "gulp-util": "^3.0.8",
-    "jsdoc-to-markdown": "^5.0.3",
-    "mocha": "^8.3.0",
-    "mochainon": "^1.0.0",
+    "jsdoc-to-markdown": "^9.0.0",
+    "mocha": "^11.0.0",
+    "sinon": "^19.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2",
     "wary": "^1.1.1"
   },
   "dependencies": {

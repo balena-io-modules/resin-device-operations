@@ -1,13 +1,16 @@
-const m = require('mochainon');
-const Promise = require('bluebird');
-const fs = Promise.promisifyAll(require('fs'));
-const path = require('path');
-const imagefs = require('balena-image-fs');
-const wary = require('wary');
-const rindle = require('rindle');
-const operations = require('../lib/operations');
-const utils = require('../lib/utils');
-const sdk = require('etcher-sdk');
+import Promise from 'bluebird';
+import * as sinon from 'sinon';
+import { expect, use as chaiUse } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+chaiUse(chaiAsPromised);
+import * as fs from 'fs/promises';
+import path from 'path';
+import * as imagefs from 'balena-image-fs';
+import wary from 'wary';
+import rindle from 'rindle';
+import operations from '../build/operations';
+import utils from '../build/utils';
+import * as sdk from 'etcher-sdk';
 
 const RASPBERRY_PI = path.join(__dirname, 'images', 'raspberrypi.img');
 const EDISON = path.join(__dirname, 'images', 'edison-config.img');
@@ -18,22 +21,22 @@ const FILES =
 	{'cmdline.txt': 'dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'};
 
 const extract = streamDisposer => Promise.using(streamDisposer, stream => new Promise(function(resolve, reject) {
-    let result = '';
-    stream.on('error', reject);
-    stream.on('data', chunk => result += chunk);
-    return stream.on('end', () => resolve(result));
+	let result = '';
+	stream.on('error', reject);
+	stream.on('data', chunk => result += chunk);
+	return stream.on('end', () => resolve(result));
 }));
 
 wary.it('should be fulfilled if no operations', {}, function() {
 	const configuration = operations.execute(RASPBERRY_PI, []);
 	const promise = rindle.wait(configuration);
-	return m.chai.expect(promise).to.be.fulfilled;
+	return expect(promise).to.be.fulfilled;
 });
 
 wary.it('should be fulfilled if operations is undefined', {}, function() {
 	const configuration = operations.execute(RASPBERRY_PI);
 	const promise = rindle.wait(configuration);
-	return m.chai.expect(promise).to.be.fulfilled;
+	return expect(promise).to.be.fulfilled;
 });
 
 wary.it('should be fulfilled even if it finished long ago', {}, function() {
@@ -44,7 +47,7 @@ wary.it('should be fulfilled even if it finished long ago', {}, function() {
 
 	return f().then(function(configuration) {
 		const promise = rindle.wait(configuration);
-		return m.chai.expect(promise).to.be.fulfilled;
+		return expect(promise).to.be.fulfilled;
 	});
 });
 
@@ -56,7 +59,7 @@ wary.it('should be rejected if the command does not exist',
 	]);
 
 	const promise = rindle.wait(configuration);
-	return m.chai.expect(promise).to.be.rejectedWith('Unknown command: foobar');
+	return expect(promise).to.be.rejectedWith('Unknown command: foobar');
 });
 
 wary.it('should be able to copy a single file between raspberry pi partitions',
@@ -81,13 +84,13 @@ wary.it('should be able to copy a single file between raspberry pi partitions',
 	]);
 
 	return rindle.wait(configuration).then(() => imagefs.interact(
-        images.raspberrypi,
-        5,
-        function(_fs) {
-            const readFileAsync = Promise.promisify(_fs.readFile);
-            return readFileAsync('/cmdline.txt')
-                .then(b => b.toString());
-    })).then(contents => m.chai.expect(contents).to.equal(FILES['cmdline.txt']));
+		images.raspberrypi,
+		5,
+		function(_fs) {
+			const readFileAsync = Promise.promisify(_fs.readFile);
+			return readFileAsync('/cmdline.txt')
+				.then(b => b.toString());
+	})).then(contents => expect(contents).to.equal(FILES['cmdline.txt']));
 });
 
 wary.it('should copy multiple files between raspberry pi partitions',
@@ -128,13 +131,13 @@ wary.it('should copy multiple files between raspberry pi partitions',
 	]);
 
 	return rindle.wait(configuration).then(() => imagefs.interact(
-        images.raspberrypi,
-        1,
-        function(_fs) {
-            const readFileAsync = Promise.promisify(_fs.readFile);
-            return readFileAsync('/cmdline.copy')
-                .then(b => b.toString());
-    })).then(contents => m.chai.expect(contents).to.equal(FILES['cmdline.txt']));
+		images.raspberrypi,
+		1,
+		function(_fs) {
+			const readFileAsync = Promise.promisify(_fs.readFile);
+			return readFileAsync('/cmdline.copy')
+				.then(b => b.toString());
+	})).then(contents => expect(contents).to.equal(FILES['cmdline.txt']));
 });
 
 wary.it('should be able to replace a single file from a raspberry pi partition',
@@ -154,13 +157,13 @@ wary.it('should be able to replace a single file from a raspberry pi partition',
 	]);
 
 	return rindle.wait(configuration).then(() => imagefs.interact(
-        images.raspberrypi,
-        1,
-        function(_fs) {
-            const readFileAsync = Promise.promisify(_fs.readFile);
-            return readFileAsync('/cmdline.txt')
-                .then(b => b.toString());
-    })).then(contents => m.chai.expect(contents).to.equal('dwc_otg.lpm_enable=1 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'));
+		images.raspberrypi,
+		1,
+		function(_fs) {
+			const readFileAsync = Promise.promisify(_fs.readFile);
+			return readFileAsync('/cmdline.txt')
+				.then(b => b.toString());
+	})).then(contents => expect(contents).to.equal('dwc_otg.lpm_enable=1 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'));
 });
 
 wary.it('should be able to perform multiple replaces in an raspberry pi partition',
@@ -189,13 +192,13 @@ wary.it('should be able to perform multiple replaces in an raspberry pi partitio
 	]);
 
 	return rindle.wait(configuration).then(() => imagefs.interact(
-        images.raspberrypi,
-        1,
-        function(_fs) {
-            const readFileAsync = Promise.promisify(_fs.readFile);
-            return readFileAsync('/cmdline.txt')
-                .then(b => b.toString());
-    })).then(contents => m.chai.expect(contents).to.equal('dwc_otg.lpm_enable=2 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'));
+		images.raspberrypi,
+		1,
+		function(_fs) {
+			const readFileAsync = Promise.promisify(_fs.readFile);
+			return readFileAsync('/cmdline.txt')
+				.then(b => b.toString());
+	})).then(contents => expect(contents).to.equal('dwc_otg.lpm_enable=2 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'));
 });
 
 wary.it('should be able to completely replace a file from an edison partition',
@@ -212,13 +215,13 @@ wary.it('should be able to completely replace a file from an edison partition',
 	]);
 
 	return rindle.wait(configuration).then(() => imagefs.interact(
-        images.edison,
-        undefined,
-        function(_fs) {
-            const readFileAsync = Promise.promisify(_fs.readFile);
-            return readFileAsync('/config.json')
-                .then(b => b.toString());
-    })).then(contents => m.chai.expect(contents).to.equal('Replaced!'));
+		images.edison,
+		undefined,
+		function(_fs) {
+			const readFileAsync = Promise.promisify(_fs.readFile);
+			return readFileAsync('/config.json')
+				.then(b => b.toString());
+	})).then(contents => expect(contents).to.equal('Replaced!'));
 });
 
 wary.it('should obey when properties',
@@ -270,13 +273,13 @@ wary.it('should obey when properties',
 		{lpm: 2});
 
 	return rindle.wait(configuration).then(() => imagefs.interact(
-        images.raspberrypi,
-        1,
-        function(_fs) {
-            const readFileAsync = Promise.promisify(_fs.readFile);
-            return readFileAsync('/cmdline.txt')
-                .then(b => b.toString());
-    })).then(contents => m.chai.expect(contents).to.equal('dwc_otg.lpm_enable=2 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'));
+		images.raspberrypi,
+		1,
+		function(_fs) {
+			const readFileAsync = Promise.promisify(_fs.readFile);
+			return readFileAsync('/cmdline.txt')
+				.then(b => b.toString());
+	})).then(contents => expect(contents).to.equal('dwc_otg.lpm_enable=2 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'));
 });
 
 wary.it('should emit state events for operations',
@@ -317,11 +320,11 @@ wary.it('should emit state events for operations',
 	}
 	]);
 
-	const stateSpy = m.sinon.spy();
+	const stateSpy = sinon.spy();
 	configuration.on('state', stateSpy);
 
 	return rindle.wait(configuration).then(function() {
-		m.chai.expect(stateSpy.firstCall.args[0]).to.deep.equal({
+		expect(stateSpy.firstCall.args[0]).to.deep.equal({
 			operation: {
 				command: 'replace',
 				file: {
@@ -337,7 +340,7 @@ wary.it('should emit state events for operations',
 			percentage: 33.3
 		});
 
-		m.chai.expect(stateSpy.secondCall.args[0]).to.deep.equal({
+		expect(stateSpy.secondCall.args[0]).to.deep.equal({
 			operation: {
 				command: 'replace',
 				file: {
@@ -353,7 +356,7 @@ wary.it('should emit state events for operations',
 			percentage: 66.7
 		});
 
-		return m.chai.expect(stateSpy.thirdCall.args[0]).to.deep.equal({
+		expect(stateSpy.thirdCall.args[0]).to.deep.equal({
 			operation: {
 				command: 'replace',
 				file: {
@@ -376,25 +379,25 @@ wary.it('should read state events for operations after a slight delay',
 , function(images) {
 
 	const configure = () => Promise.try(() => operations.execute(images.raspberrypi, [{
-        command: 'replace',
-        file: {
-            partition: {
-                primary: 1
-            },
-            path: '/cmdline.txt'
-        },
-        find: 'lpm_enable=0',
-        replace: 'lpm_enable=1'
-    }
-    ]));
+		command: 'replace',
+		file: {
+			partition: {
+				primary: 1
+			},
+			path: '/cmdline.txt'
+		},
+		find: 'lpm_enable=0',
+		replace: 'lpm_enable=1'
+	}
+	]));
 
 	return configure().then(function(configuration) {
-		const stateSpy = m.sinon.spy();
+		const stateSpy = sinon.spy();
 		configuration.on('state', stateSpy);
 
 		return rindle.wait(configuration).then(function() {
-			m.chai.expect(stateSpy).to.have.been.calledOnce;
-			return m.chai.expect(stateSpy.firstCall.args[0]).to.deep.equal({
+			expect(stateSpy.calledOnce).to.be.true;
+			expect(stateSpy.firstCall.args[0]).to.deep.equal({
 				operation: {
 					command: 'replace',
 					file: {
@@ -429,8 +432,8 @@ wary.it('should run a script with arguments that exits successfully', {}, functi
 	configuration.on('stderr', data => stderr += data);
 
 	return rindle.wait(configuration).then(function() {
-		m.chai.expect(stdout.replace(/\r/g, '')).to.equal('hello world\n');
-		return m.chai.expect(stderr).to.equal('');
+		expect(stdout.replace(/\r/g, '')).to.equal('hello world\n');
+		expect(stderr).to.equal('');
 	});
 });
 
@@ -449,8 +452,8 @@ wary.it('should run a script that prints to stderr', {}, function() {
 	configuration.on('stderr', data => stderr += data);
 
 	return rindle.wait(configuration).then(function() {
-		m.chai.expect(stdout).to.equal('');
-		return m.chai.expect(stderr.replace(/[\r\n]/g, '').trim()).to.equal('stderr output');
+		expect(stdout).to.equal('');
+		expect(stderr.replace(/[\r\n]/g, '').trim()).to.equal('stderr output');
 	});
 });
 
@@ -462,7 +465,7 @@ wary.it('should be rejected if the script does not exist', {}, function() {
 	]);
 
 	const promise = rindle.wait(configuration);
-	return m.chai.expect(promise).to.be.rejectedWith('ENOENT');
+	return expect(promise).to.be.rejectedWith('ENOENT');
 });
 
 wary.it('should run a script that doesn not have execution privileges', {}, function() {
@@ -481,8 +484,8 @@ wary.it('should run a script that doesn not have execution privileges', {}, func
 	configuration.on('stderr', data => stderr += data);
 
 	return rindle.wait(configuration).then(function() {
-		m.chai.expect(stdout.replace(/\r/g, '')).to.equal('hello world\n');
-		return m.chai.expect(stderr).to.equal('');
+		expect(stdout.replace(/\r/g, '')).to.equal('hello world\n');
+		expect(stderr).to.equal('');
 	});
 });
 
@@ -494,7 +497,7 @@ wary.it('should be rejected if the script finishes with an error', {}, function(
 	]);
 
 	const promise = rindle.wait(configuration);
-	return m.chai.expect(promise).to.be.rejectedWith('Exited with error code: 1');
+	return expect(promise).to.be.rejectedWith('Exited with error code: 1');
 });
 
 wary.it('should change directory to the dirname of the script', {}, function() {
@@ -512,8 +515,8 @@ wary.it('should change directory to the dirname of the script', {}, function() {
 	configuration.on('stderr', data => stderr += data);
 
 	return rindle.wait(configuration).then(function() {
-		m.chai.expect(stdout.replace(/\r/g, '')).to.equal(`${EDISON_ZIP}${path.sep}\n`);
-		return m.chai.expect(stderr).to.equal('');
+		expect(stdout.replace(/\r/g, '')).to.equal(`${EDISON_ZIP}${path.sep}\n`);
+		expect(stderr).to.equal('');
 	});
 });
 
@@ -523,10 +526,10 @@ wary.it('should be rejected if the burn operation lacks a drive option', {}, fun
 	]);
 
 	const promise = rindle.wait(configuration);
-	return m.chai.expect(promise).to.be.rejectedWith('Missing drive option');
+	return expect(promise).to.be.rejectedWith('Missing drive option');
 });
 
-const mockBlockDeviceFromFile = function(path) {
+const mockBlockDeviceFromFile = async function(path) {
 	const drive = {
 		raw: path,
 		device: path,
@@ -536,7 +539,7 @@ const mockBlockDeviceFromFile = function(path) {
 		isSystem: false,
 		description: 'some description',
 		mountpoints: [],
-		size: fs.statSync(path).size,
+		size: (await fs.stat(path)).size,
 		isReadOnly: false,
 		busType: 'UNKNOWN',
 		error: null,
@@ -568,25 +571,26 @@ const mockBlockDeviceFromFile = function(path) {
 wary.it('should be able to burn an image', {
 	raspberrypi: RASPBERRY_PI,
 	random: RANDOM
-}
-, function(images) {
-	const drive = mockBlockDeviceFromFile(images.random);
-
+}, async function(images) {
+	const drive = await mockBlockDeviceFromFile(images.random);
 	const configuration = operations.execute(images.raspberrypi, [
 		{command: 'burn'}
 	], { drive });
 
-	const progressSpy = m.sinon.spy();
+	const progressSpy = sinon.spy();
 	configuration.on('burn', progressSpy);
 
-	return rindle.wait(configuration).then(() => fs.statAsync(images.raspberrypi).get('size').then(function(size) {
-        m.chai.expect(progressSpy).to.have.been.called;
-        const state = progressSpy.firstCall.args[0];
-        m.chai.expect(state.length).to.not.equal(0);
-        return m.chai.expect(state.length).to.equal(size);
-    })).then(() => Promise.props({
-        raspberrypi: fs.readFileAsync(images.raspberrypi),
-        random: fs.readFileAsync(images.random)}).then(results => m.chai.expect(results.random).to.deep.equal(results.raspberrypi)));
+	await rindle.wait(configuration);
+	const size = (await fs.stat(images.raspberrypi)).size;
+	expect(progressSpy.called).to.be.true;
+	const state = progressSpy.firstCall.args[0];
+	expect(state.length).to.not.equal(0);
+	expect(state.length).to.equal(size);
+	const results = await Promise.props({
+		raspberrypi: fs.readFile(images.raspberrypi),
+		random: fs.readFile(images.random),
+	});
+	expect(results.random).to.deep.equal(results.raspberrypi);
 });
 
 wary.it('should set an os option automatically',
@@ -628,13 +632,13 @@ wary.it('should set an os option automatically',
 	]);
 
 	return rindle.wait(configuration).then(() => imagefs.interact(
-        images.edison,
-        undefined,
-        function(_fs) {
-            const readFileAsync = Promise.promisify(_fs.readFile);
-            return readFileAsync('/config.json')
-                .then(b => b.toString());
-    })).then(contents => m.chai.expect(contents).to.equal(utils.getOperatingSystem()));
+		images.edison,
+		undefined,
+		function(_fs) {
+			const readFileAsync = Promise.promisify(_fs.readFile);
+			return readFileAsync('/config.json')
+				.then(b => b.toString());
+	})).then(contents => expect(contents).to.equal(utils.getOperatingSystem()));
 });
 
 wary.it('should allow the os option to be overrided',
@@ -688,13 +692,13 @@ wary.it('should allow the os option to be overrided',
 		{os: 'resinos'});
 
 	return rindle.wait(configuration).then(() => imagefs.interact(
-        images.edison,
-        undefined,
-        function(_fs) {
-            const readFileAsync = Promise.promisify(_fs.readFile);
-            return readFileAsync('/config.json')
-                .then(b => b.toString());
-    })).then(contents => m.chai.expect(contents).to.equal('resinos'));
+		images.edison,
+		undefined,
+		function(_fs) {
+			const readFileAsync = Promise.promisify(_fs.readFile);
+			return readFileAsync('/config.json')
+				.then(b => b.toString());
+	})).then(contents => expect(contents).to.equal('resinos'));
 });
 
 wary.run().catch(function(error) {

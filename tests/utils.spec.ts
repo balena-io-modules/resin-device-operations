@@ -1,10 +1,8 @@
-const m = require('mochainon');
-const _ = require('lodash');
-const os = require('os');
-const {
-    EventEmitter
-} = require('events');
-const utils = require('../lib/utils');
+import * as _ from 'lodash';
+import { expect } from 'chai';
+import * as sinon from 'sinon';
+import os from 'os';
+import utils from '../build/utils';
 
 describe('Utils:', function() {
 
@@ -19,8 +17,8 @@ describe('Utils:', function() {
 					{command: 'bar'}
 				];});
 
-			return it('should return the same operations', function() {
-				return m.chai.expect(utils.filterWhenMatches(this.operations)).to.deep.equal(this.operations);
+			it('should return the same operations', function() {
+				expect(utils.filterWhenMatches(this.operations)).to.deep.equal(this.operations);
 			});
 		});
 
@@ -41,9 +39,9 @@ describe('Utils:', function() {
 				}
 				];});
 
-			return it('should return the operatiosn what match the options', function() {
+			it('should return the operatiosn what match the options', function() {
 				const operations = utils.filterWhenMatches(this.operations, {hello: 'planet'});
-				return m.chai.expect(operations).to.deep.equal([{
+				expect(operations).to.deep.equal([{
 					command: 'bar',
 					when: {
 						hello: 'planet'
@@ -53,7 +51,7 @@ describe('Utils:', function() {
 		});
 	});
 
-		return describe('given operations with a numbered when property', function() {
+		describe('given operations with a numbered when property', function() {
 
 			beforeEach(function() {
 				return this.operations = [{
@@ -72,7 +70,7 @@ describe('Utils:', function() {
 
 			it('should be able to match using numbers', function() {
 				const operations = utils.filterWhenMatches(this.operations, {foo: 1});
-				return m.chai.expect(operations).to.deep.equal([{
+				expect(operations).to.deep.equal([{
 					command: 'foo',
 					when: {
 						foo: 1
@@ -81,9 +79,9 @@ describe('Utils:', function() {
 				]);
 		});
 
-			return it('should not be able to match using strings', function() {
+			it('should not be able to match using strings', function() {
 				const operations = utils.filterWhenMatches(this.operations, {foo: '1'});
-				return m.chai.expect(operations).to.deep.equal([]);
+				expect(operations).to.deep.equal([]);
 			});
 		});
 	});
@@ -103,17 +101,17 @@ describe('Utils:', function() {
 
 			it('should return a single item array if missing foo', function() {
 				const result = utils.getMissingOptions(this.operations, {bar: 2});
-				return m.chai.expect(result).to.deep.equal([ 'foo' ]);
+				expect(result).to.deep.equal([ 'foo' ]);
 			});
 
 			it('should return a single item array if no options', function() {
 				const result = utils.getMissingOptions(this.operations, null);
-				return m.chai.expect(result).to.deep.equal([ 'foo' ]);
+				expect(result).to.deep.equal([ 'foo' ]);
 			});
 
-			return it('should return an empty array if not missing anything', function() {
+			it('should return an empty array if not missing anything', function() {
 				const result = utils.getMissingOptions(this.operations, {foo: 2});
-				return m.chai.expect(result).to.deep.equal([]);
+				expect(result).to.deep.equal([]);
 			});
 		});
 
@@ -137,26 +135,26 @@ describe('Utils:', function() {
 
 			it('should return a 3 items array if no options', function() {
 				const result = utils.getMissingOptions(this.operations, {});
-				return m.chai.expect(result).to.deep.equal([ 'foo', 'bar', 'baz' ]);
+				expect(result).to.deep.equal([ 'foo', 'bar', 'baz' ]);
 			});
 
 			it('should return a 2 items array if one option exist', function() {
 				const result = utils.getMissingOptions(this.operations, {bar: 4});
-				return m.chai.expect(result).to.deep.equal([ 'foo', 'baz' ]);
+				expect(result).to.deep.equal([ 'foo', 'baz' ]);
 			});
 
-			return it('should return an empty array if not missing anything', function() {
+			it('should return an empty array if not missing anything', function() {
 				const result = utils.getMissingOptions(this.operations, {
 					foo: 1,
 					bar: 2,
 					baz: 3
 				}
 				);
-				return m.chai.expect(result).to.deep.equal([]);
+				expect(result).to.deep.equal([]);
 			});
 		});
 
-		return describe('given multiple command operations asking for the same option', function() {
+		describe('given multiple command operations asking for the same option', function() {
 
 			beforeEach(function() {
 				return this.operations = [{
@@ -179,19 +177,19 @@ describe('Utils:', function() {
 				}
 				];});
 
-			return it('should return the missing option once', function() {
+			it('should return the missing option once', function() {
 				const result = utils.getMissingOptions(this.operations, null);
-				return m.chai.expect(result).to.deep.equal([ 'os' ]);
+				expect(result).to.deep.equal([ 'os' ]);
 			});
 		});
 	});
 
-	return describe('.getOperatingSystem()', function() {
+	describe('.getOperatingSystem()', function() {
 
 		describe('given darwin', function() {
 
 			beforeEach(function() {
-				this.osPlatformStub = m.sinon.stub(os, 'platform');
+				this.osPlatformStub = sinon.stub(os, 'platform');
 				return this.osPlatformStub.returns('darwin');
 			});
 
@@ -199,13 +197,13 @@ describe('Utils:', function() {
 				return this.osPlatformStub.restore();
 			});
 
-			return it('should return osx', () => m.chai.expect(utils.getOperatingSystem()).to.equal('osx'));
+			it('should return osx', () => expect(utils.getOperatingSystem()).to.equal('osx'));
 		});
 
 		describe('given win32', function() {
 
 			beforeEach(function() {
-				this.osPlatformStub = m.sinon.stub(os, 'platform');
+				this.osPlatformStub = sinon.stub(os, 'platform');
 				return this.osPlatformStub.returns('win32');
 			});
 
@@ -213,13 +211,13 @@ describe('Utils:', function() {
 				return this.osPlatformStub.restore();
 			});
 
-			return it('should return win32', () => m.chai.expect(utils.getOperatingSystem()).to.equal('win32'));
+			it('should return win32', () => expect(utils.getOperatingSystem()).to.equal('win32'));
 		});
 
-		return describe('given linux', function() {
+		describe('given linux', function() {
 
 			beforeEach(function() {
-				this.osPlatformStub = m.sinon.stub(os, 'platform');
+				this.osPlatformStub = sinon.stub(os, 'platform');
 				return this.osPlatformStub.returns('linux');
 			});
 
@@ -227,7 +225,7 @@ describe('Utils:', function() {
 				return this.osPlatformStub.restore();
 			});
 
-			return it('should return linux', () => m.chai.expect(utils.getOperatingSystem()).to.equal('linux'));
+			it('should return linux', () => expect(utils.getOperatingSystem()).to.equal('linux'));
 		});
 	});
 });
