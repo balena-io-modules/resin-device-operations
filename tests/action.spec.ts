@@ -1,52 +1,52 @@
-m = require('mochainon')
-Promise = require('bluebird')
-action = require('../lib/action')
-commands = require('../lib/commands')
+const m = require('mochainon');
+const Promise = require('bluebird');
+const action = require('../lib/action');
+const commands = require('../lib/commands');
 
-describe 'Command:', ->
+describe('Command:', function() {
 
-	describe '.getOperationProgress()', ->
+	describe('.getOperationProgress()', () => describe('given a set of three operation', function() {
 
-		describe 'given a set of three operation', ->
+        beforeEach(function() {
+            return this.operations = [
+                { command: 'first' },
+                { command: 'second' },
+                { command: 'third' }
+            ];});
 
-			beforeEach ->
-				@operations = [
-					{ command: 'first' }
-					{ command: 'second' }
-					{ command: 'third' }
-				]
+        it('should return 33.3 for the first one', function() {
+            const percentage = action.getOperationProgress(0, this.operations);
+            return m.chai.expect(percentage).to.equal(33.3);
+        });
 
-			it 'should return 33.3 for the first one', ->
-				percentage = action.getOperationProgress(0, @operations)
-				m.chai.expect(percentage).to.equal(33.3)
+        it('should return 66.7 for the second one', function() {
+            const percentage = action.getOperationProgress(1, this.operations);
+            return m.chai.expect(percentage).to.equal(66.7);
+        });
 
-			it 'should return 66.7 for the second one', ->
-				percentage = action.getOperationProgress(1, @operations)
-				m.chai.expect(percentage).to.equal(66.7)
+        return it('should return 100 for the third one', function() {
+            const percentage = action.getOperationProgress(2, this.operations);
+            return m.chai.expect(percentage).to.equal(100);
+        });
+    }));
 
-			it 'should return 100 for the third one', ->
-				percentage = action.getOperationProgress(2, @operations)
-				m.chai.expect(percentage).to.equal(100)
+	return describe('.run()', function() {
 
-	describe '.run()', ->
+		it('should be rejected if the command type is invalid', () => m.chai.expect(() => action.run('foo/bar',
+        {command: 'foobar'})).to.throw('Unknown command: foobar'));
 
-		it 'should be rejected if the command type is invalid', ->
-			m.chai.expect ->
-				action.run 'foo/bar',
-				command: 'foobar'
-			.to.throw('Unknown command: foobar')
+		return describe('given the command type exists', function() {
 
-		describe 'given the command type exists', ->
+			beforeEach(() => commands.foobar = () => Promise.resolve('hello'));
 
-			beforeEach ->
-				commands.foobar = ->
-					return Promise.resolve('hello')
+			afterEach(() => delete commands.foobar);
 
-			afterEach ->
-				delete commands.foobar
+			return it('should return a function to call the command', function() {
+				const promise = action.run('foo/bar',
+					{command: 'foobar'});
 
-			it 'should return a function to call the command', ->
-				promise = action.run 'foo/bar',
-					command: 'foobar'
-
-				m.chai.expect(promise()).to.eventually.equal('hello')
+				return m.chai.expect(promise()).to.eventually.equal('hello');
+			});
+		});
+	});
+});

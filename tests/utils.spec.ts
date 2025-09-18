@@ -1,178 +1,233 @@
-m = require('mochainon')
-_ = require('lodash')
-os = require('os')
-EventEmitter = require('events').EventEmitter
-utils = require('../lib/utils')
+const m = require('mochainon');
+const _ = require('lodash');
+const os = require('os');
+const {
+    EventEmitter
+} = require('events');
+const utils = require('../lib/utils');
 
-describe 'Utils:', ->
+describe('Utils:', function() {
 
-	describe '.filterWhenMatches()', ->
+	describe('.filterWhenMatches()', function() {
 
-		describe 'given operations without a when property', ->
+		describe('given operations without a when property', function() {
 
-			beforeEach ->
-				@operations = [
-					command: 'foo'
+			beforeEach(function() {
+				return this.operations = [
+					{command: 'foo'}
 				,
-					command: 'bar'
-				]
+					{command: 'bar'}
+				];});
 
-			it 'should return the same operations', ->
-				m.chai.expect(utils.filterWhenMatches(@operations)).to.deep.equal(@operations)
+			return it('should return the same operations', function() {
+				return m.chai.expect(utils.filterWhenMatches(this.operations)).to.deep.equal(this.operations);
+			});
+		});
 
-		describe 'given operations with a when property', ->
+		describe('given operations with a when property', function() {
 
-			beforeEach ->
-				@operations = [
-					command: 'foo'
-					when:
+			beforeEach(function() {
+				return this.operations = [{
+					command: 'foo',
+					when: {
 						hello: 'world'
-				,
-					command: 'bar'
-					when:
+					}
+				}
+				, {
+					command: 'bar',
+					when: {
 						hello: 'planet'
-				]
+					}
+				}
+				];});
 
-			it 'should return the operatiosn what match the options', ->
-				operations = utils.filterWhenMatches(@operations, hello: 'planet')
-				m.chai.expect(operations).to.deep.equal [
-					command: 'bar'
-					when:
+			return it('should return the operatiosn what match the options', function() {
+				const operations = utils.filterWhenMatches(this.operations, {hello: 'planet'});
+				return m.chai.expect(operations).to.deep.equal([{
+					command: 'bar',
+					when: {
 						hello: 'planet'
-				]
+					}
+				}
+				]);
+		});
+	});
 
-		describe 'given operations with a numbered when property', ->
+		return describe('given operations with a numbered when property', function() {
 
-			beforeEach ->
-				@operations = [
-					command: 'foo'
-					when:
+			beforeEach(function() {
+				return this.operations = [{
+					command: 'foo',
+					when: {
 						foo: 1
-				,
-					command: 'bar'
-					when:
+					}
+				}
+				, {
+					command: 'bar',
+					when: {
 						foo: 2
-				]
+					}
+				}
+				];});
 
-			it 'should be able to match using numbers', ->
-				operations = utils.filterWhenMatches(@operations, foo: 1)
-				m.chai.expect(operations).to.deep.equal [
-					command: 'foo'
-					when:
+			it('should be able to match using numbers', function() {
+				const operations = utils.filterWhenMatches(this.operations, {foo: 1});
+				return m.chai.expect(operations).to.deep.equal([{
+					command: 'foo',
+					when: {
 						foo: 1
-				]
+					}
+				}
+				]);
+		});
 
-			it 'should not be able to match using strings', ->
-				operations = utils.filterWhenMatches(@operations, foo: '1')
-				m.chai.expect(operations).to.deep.equal([])
+			return it('should not be able to match using strings', function() {
+				const operations = utils.filterWhenMatches(this.operations, {foo: '1'});
+				return m.chai.expect(operations).to.deep.equal([]);
+			});
+		});
+	});
 
-	describe '.getMissingOptions()', ->
+	describe('.getMissingOptions()', function() {
 
-		describe 'given a single command operations', ->
+		describe('given a single command operations', function() {
 
-			beforeEach ->
-				@operations = [
-					command: 'foo'
-					when:
+			beforeEach(function() {
+				return this.operations = [{
+					command: 'foo',
+					when: {
 						foo: 1
-				]
+					}
+				}
+				];});
 
-			it 'should return a single item array if missing foo', ->
-				result = utils.getMissingOptions(@operations, bar: 2)
-				m.chai.expect(result).to.deep.equal([ 'foo' ])
+			it('should return a single item array if missing foo', function() {
+				const result = utils.getMissingOptions(this.operations, {bar: 2});
+				return m.chai.expect(result).to.deep.equal([ 'foo' ]);
+			});
 
-			it 'should return a single item array if no options', ->
-				result = utils.getMissingOptions(@operations, null)
-				m.chai.expect(result).to.deep.equal([ 'foo' ])
+			it('should return a single item array if no options', function() {
+				const result = utils.getMissingOptions(this.operations, null);
+				return m.chai.expect(result).to.deep.equal([ 'foo' ]);
+			});
 
-			it 'should return an empty array if not missing anything', ->
-				result = utils.getMissingOptions(@operations, foo: 2)
-				m.chai.expect(result).to.deep.equal([])
+			return it('should return an empty array if not missing anything', function() {
+				const result = utils.getMissingOptions(this.operations, {foo: 2});
+				return m.chai.expect(result).to.deep.equal([]);
+			});
+		});
 
-		describe 'given multiple command operations', ->
+		describe('given multiple command operations', function() {
 
-			beforeEach ->
-				@operations = [
-					command: 'foo'
-					when:
+			beforeEach(function() {
+				return this.operations = [{
+					command: 'foo',
+					when: {
 						foo: 1
-				,
-					command: 'foo'
-					when:
-						bar: 1
+					}
+				}
+				, {
+					command: 'foo',
+					when: {
+						bar: 1,
 						baz: 1
-				]
+					}
+				}
+				];});
 
-			it 'should return a 3 items array if no options', ->
-				result = utils.getMissingOptions(@operations, {})
-				m.chai.expect(result).to.deep.equal([ 'foo', 'bar', 'baz' ])
+			it('should return a 3 items array if no options', function() {
+				const result = utils.getMissingOptions(this.operations, {});
+				return m.chai.expect(result).to.deep.equal([ 'foo', 'bar', 'baz' ]);
+			});
 
-			it 'should return a 2 items array if one option exist', ->
-				result = utils.getMissingOptions(@operations, bar: 4)
-				m.chai.expect(result).to.deep.equal([ 'foo', 'baz' ])
+			it('should return a 2 items array if one option exist', function() {
+				const result = utils.getMissingOptions(this.operations, {bar: 4});
+				return m.chai.expect(result).to.deep.equal([ 'foo', 'baz' ]);
+			});
 
-			it 'should return an empty array if not missing anything', ->
-				result = utils.getMissingOptions @operations,
-					foo: 1
-					bar: 2
+			return it('should return an empty array if not missing anything', function() {
+				const result = utils.getMissingOptions(this.operations, {
+					foo: 1,
+					bar: 2,
 					baz: 3
-				m.chai.expect(result).to.deep.equal([])
+				}
+				);
+				return m.chai.expect(result).to.deep.equal([]);
+			});
+		});
 
-		describe 'given multiple command operations asking for the same option', ->
+		return describe('given multiple command operations asking for the same option', function() {
 
-			beforeEach ->
-				@operations = [
-					command: 'foo'
-					when:
+			beforeEach(function() {
+				return this.operations = [{
+					command: 'foo',
+					when: {
 						os: 'osx'
-				,
-					command: 'foo'
-					when:
+					}
+				}
+				, {
+					command: 'foo',
+					when: {
 						os: 'linux'
-				,
-					command: 'foo'
-					when:
+					}
+				}
+				, {
+					command: 'foo',
+					when: {
 						os: 'win32'
-				]
+					}
+				}
+				];});
 
-			it 'should return the missing option once', ->
-				result = utils.getMissingOptions(@operations, null)
-				m.chai.expect(result).to.deep.equal([ 'os' ])
+			return it('should return the missing option once', function() {
+				const result = utils.getMissingOptions(this.operations, null);
+				return m.chai.expect(result).to.deep.equal([ 'os' ]);
+			});
+		});
+	});
 
-	describe '.getOperatingSystem()', ->
+	return describe('.getOperatingSystem()', function() {
 
-		describe 'given darwin', ->
+		describe('given darwin', function() {
 
-			beforeEach ->
-				@osPlatformStub = m.sinon.stub(os, 'platform')
-				@osPlatformStub.returns('darwin')
+			beforeEach(function() {
+				this.osPlatformStub = m.sinon.stub(os, 'platform');
+				return this.osPlatformStub.returns('darwin');
+			});
 
-			afterEach ->
-				@osPlatformStub.restore()
+			afterEach(function() {
+				return this.osPlatformStub.restore();
+			});
 
-			it 'should return osx', ->
-				m.chai.expect(utils.getOperatingSystem()).to.equal('osx')
+			return it('should return osx', () => m.chai.expect(utils.getOperatingSystem()).to.equal('osx'));
+		});
 
-		describe 'given win32', ->
+		describe('given win32', function() {
 
-			beforeEach ->
-				@osPlatformStub = m.sinon.stub(os, 'platform')
-				@osPlatformStub.returns('win32')
+			beforeEach(function() {
+				this.osPlatformStub = m.sinon.stub(os, 'platform');
+				return this.osPlatformStub.returns('win32');
+			});
 
-			afterEach ->
-				@osPlatformStub.restore()
+			afterEach(function() {
+				return this.osPlatformStub.restore();
+			});
 
-			it 'should return win32', ->
-				m.chai.expect(utils.getOperatingSystem()).to.equal('win32')
+			return it('should return win32', () => m.chai.expect(utils.getOperatingSystem()).to.equal('win32'));
+		});
 
-		describe 'given linux', ->
+		return describe('given linux', function() {
 
-			beforeEach ->
-				@osPlatformStub = m.sinon.stub(os, 'platform')
-				@osPlatformStub.returns('linux')
+			beforeEach(function() {
+				this.osPlatformStub = m.sinon.stub(os, 'platform');
+				return this.osPlatformStub.returns('linux');
+			});
 
-			afterEach ->
-				@osPlatformStub.restore()
+			afterEach(function() {
+				return this.osPlatformStub.restore();
+			});
 
-			it 'should return linux', ->
-				m.chai.expect(utils.getOperatingSystem()).to.equal('linux')
+			return it('should return linux', () => m.chai.expect(utils.getOperatingSystem()).to.equal('linux'));
+		});
+	});
+});
