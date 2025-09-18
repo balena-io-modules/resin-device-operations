@@ -46,7 +46,10 @@ import { commands, type Operation } from './commands';
  * 	],
  * );
  */
-export const getOperationProgress = function(index: number, operations: Operation[]) {
+export const getOperationProgress = function (
+	index: number,
+	operations: Operation[],
+) {
 	const progress = ((index + 1) / operations.length) * 100;
 	return parseFloat(progress.toFixed(1));
 };
@@ -79,10 +82,14 @@ export const getOperationProgress = function(index: number, operations: Operatio
  * 	},
  * });
  */
-export const run = function(image: string, operation: Operation, options: object) {
+export const run = function (
+	image: string,
+	operation: Operation,
+	options: object,
+) {
 	const action = commands[operation.command as keyof typeof commands];
 
-	if ((action == null)) {
+	if (action == null) {
 		throw new Error(`Unknown command: ${operation.command}`);
 	}
 

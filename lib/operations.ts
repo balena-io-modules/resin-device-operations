@@ -115,7 +115,11 @@ export interface OperationExecutionEvent extends EventEmitter {
  *
  * execution.on('end', () => console.log('Finished all operations'));
  */
-export const execute = function(image: string, operations: Operation[], options?: { os?: string }): EventEmitter {
+export const execute = function (
+	image: string,
+	operations: Operation[],
+	options?: { os?: string },
+): EventEmitter {
 	options ??= {};
 	options.os ??= utils.getOperatingSystem();
 
@@ -127,63 +131,76 @@ export const execute = function(image: string, operations: Operation[], options?
 
 	const emitter: EventEmitter & { ended?: boolean } = new EventEmitter();
 
-	Promise.try(function() {
+	Promise.try(function () {
 		operations = utils.filterWhenMatches(operations, options);
-		const promises = _.map(operations, operation => action.run(image, operation, options));
+		const promises = _.map(operations, (operation) =>
+			action.run(image, operation, options),
+		);
 
 		// There is an edge case where the event emitter instance
 		// emits the `end` event before the client is able to
 		// register a listener for it.
 		const emitterOn = emitter.on;
-		emitter.on = function(...args) {
+		emitter.on = function (...args) {
 			const [event, callback] = args;
-			if ((event === 'end') && emitter.ended) {
+			if (event === 'end' && emitter.ended) {
 				// Should this return 'emitterOn' to continue the 'this' chain as per the typings?
 				return (callback as (...args: any[]) => unknown)();
 			}
 			return emitterOn.apply(emitter, args);
 		};
 
-		return Promise.delay(1).then(() => Promise.each(promises, function(promise, index) {
-			const state = {
-				operation: operations[index],
-				percentage: action.getOperationProgress(index, operations)
-			};
+		return Promise.delay(1).then(() =>
+			Promise.each(promises, function (promise, index) {
+				const state = {
+					operation: operations[index],
+					percentage: action.getOperationProgress(index, operations),
+				};
 
-			emitter.emit('state', state);
+				emitter.emit('state', state);
 
-			return promise().then(function(actionEvent: OperationExecutionEvent) {
-
-				// Pipe stdout/stderr events
-				if ((actionEvent == null)) {
-					return;
-				}
-				if (actionEvent.stdout != null) {
-					actionEvent.stdout.on('data', data => emitter.emit('stdout', data));
-				}
-
-				if (actionEvent.stderr != null) {
-					actionEvent.stderr.on('data', data => emitter.emit('stderr', data));
-				}
-
-				// Emit burn command progress state as `burn`
-				actionEvent.on('progress', stateEvent => emitter.emit('burn', stateEvent));
-
-				return rindle.wait(actionEvent).spread(function(code: unknown) {
-					// TODO: the number check is needed here because `rindle` is getting
-					// the `{ sourceChecksum }` response that is otherwise treated as an error code
-					// This hack is ugly and should be fixed in a better way.
-					if (_.isNumber(code) && (code !== 0)) {
-						throw new Error(`Exited with error code: ${code}`);
+				return promise().then(function (actionEvent: OperationExecutionEvent) {
+					// Pipe stdout/stderr events
+					if (actionEvent == null) {
+						return;
 					}
-				});
-			});
-		}));}).then(function() {
-		emitter.emit('end');
+					if (actionEvent.stdout != null) {
+						actionEvent.stdout.on('data', (data) =>
+							emitter.emit('stdout', data),
+						);
+					}
 
-		// Mark the emitter as ended.
-		// Used to stub `emitter.on()` above.
-		return emitter.ended = true;}).catch(error => emitter.emit('error', error));
+					if (actionEvent.stderr != null) {
+						actionEvent.stderr.on('data', (data) =>
+							emitter.emit('stderr', data),
+						);
+					}
+
+					// Emit burn command progress state as `burn`
+					actionEvent.on('progress', (stateEvent) =>
+						emitter.emit('burn', stateEvent),
+					);
+
+					return rindle.wait(actionEvent).spread(function (code: unknown) {
+						// TODO: the number check is needed here because `rindle` is getting
+						// the `{ sourceChecksum }` response that is otherwise treated as an error code
+						// This hack is ugly and should be fixed in a better way.
+						if (_.isNumber(code) && code !== 0) {
+							throw new Error(`Exited with error code: ${code}`);
+						}
+					});
+				});
+			}),
+		);
+	})
+		.then(function () {
+			emitter.emit('end');
+
+			// Mark the emitter as ended.
+			// Used to stub `emitter.on()` above.
+			return (emitter.ended = true);
+		})
+		.catch((error) => emitter.emit('error', error));
 
 	return emitter;
 };

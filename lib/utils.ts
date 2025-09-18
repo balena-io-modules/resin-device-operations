@@ -50,9 +50,15 @@ import type { Operation } from './commands';
  * 	{ name: 'john'},
  * );
  */
-export const filterWhenMatches = function(operations: Operation[], options: object) {
+export const filterWhenMatches = function (
+	operations: Operation[],
+	options: object,
+) {
 	options ??= {};
-	return _.filter(operations, operation => operation.when == null || _.isMatch(options, operation.when));
+	return _.filter(
+		operations,
+		(operation) => operation.when == null || _.isMatch(options, operation.when),
+	);
 };
 
 /**
@@ -79,14 +85,12 @@ export const filterWhenMatches = function(operations: Operation[], options: obje
  * console.log(missingOptions);
  * > [ 'foo' ]
  */
-export const getMissingOptions = function(operations: Operation[], options: object) {
+export const getMissingOptions = function (
+	operations: Operation[],
+	options: object,
+) {
 	options ??= {};
-	const usedOptions = _.flatten(
-		_.map(
-			_.map(operations, 'when'),
-			_.keys
-		)
-	);
+	const usedOptions = _.flatten(_.map(_.map(operations, 'when'), _.keys));
 	return _.uniq(_.difference(usedOptions, _.keys(options)));
 };
 
@@ -100,11 +104,13 @@ export const getMissingOptions = function(operations: Operation[], options: obje
  * @example
  * const os = utils.getOperatingSystem();
  */
-export const getOperatingSystem = function() {
+export const getOperatingSystem = function () {
 	const platform = os.platform();
 
 	switch (platform) {
-		case 'darwin': return 'osx';
-		default: return platform;
+		case 'darwin':
+			return 'osx';
+		default:
+			return platform;
 	}
 };
