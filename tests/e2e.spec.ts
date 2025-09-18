@@ -20,13 +20,6 @@ const RANDOM = path.join(__dirname, 'images', 'device.random');
 const FILES =
 	{'cmdline.txt': 'dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait \n'};
 
-const extract = streamDisposer => Promise.using(streamDisposer, stream => new Promise(function(resolve, reject) {
-	let result = '';
-	stream.on('error', reject);
-	stream.on('data', chunk => result += chunk);
-	return stream.on('end', () => resolve(result));
-}));
-
 wary.it('should be fulfilled if no operations', {}, function() {
 	const configuration = operations.execute(RASPBERRY_PI, []);
 	const promise = rindle.wait(configuration);
