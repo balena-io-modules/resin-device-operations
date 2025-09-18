@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import Promise from 'bluebird';
 import { EventEmitter } from 'events';
 import * as _ from 'lodash';
 import fs from 'fs/promises';
@@ -24,40 +23,39 @@ import * as imagefs from 'balena-image-fs';
 import * as sdk from 'etcher-sdk';
 import type { AdapterSourceDestination } from 'etcher-sdk/build/scanner/adapters';
 
-const getDrive = (drive: AdapterSourceDestination | string) =>
-	Promise.try(function () {
-		if (_.isObject(drive) && drive.size && drive.raw != null) {
-			return drive;
-		}
+const getDrive = async (drive: AdapterSourceDestination | string) => {
+	if (_.isObject(drive) && drive.size && drive.raw != null) {
+		return drive;
+	}
 
-		if (!_.isString(drive)) {
-			throw new Error(
-				'Drive is not a string, nor an object with `raw` and `size` properties',
-			);
-		}
+	if (!_.isString(drive)) {
+		throw new Error(
+			'Drive is not a string, nor an object with `raw` and `size` properties',
+		);
+	}
 
-		const adapter = new sdk.scanner.adapters.BlockDeviceAdapter({
-			includeSystemDrives: () => false,
-			unmountOnSuccess: false,
-			write: true,
-			direct: true,
-		});
-		const scanner = new sdk.scanner.Scanner([adapter]);
-		return scanner.start().then(function () {
-			try {
-				const d = scanner.getBy('device', drive);
-				if (
-					d === undefined ||
-					!(d instanceof sdk.sourceDestination.BlockDevice)
-				) {
-					throw new Error(`Drive not found: ${drive}`);
-				}
-				return d;
-			} finally {
-				scanner.stop();
-			}
-		});
+	const adapter = new sdk.scanner.adapters.BlockDeviceAdapter({
+		includeSystemDrives: () => false,
+		unmountOnSuccess: false,
+		write: true,
+		direct: true,
 	});
+	const scanner = new sdk.scanner.Scanner([adapter]);
+	return scanner.start().then(function () {
+		try {
+			const d = scanner.getBy('device', drive);
+			if (
+				d === undefined ||
+				!(d instanceof sdk.sourceDestination.BlockDevice)
+			) {
+				throw new Error(`Drive not found: ${drive}`);
+			}
+			return d;
+		} finally {
+			scanner.stop();
+		}
+	});
+};
 
 const normalizePartition = function (
 	partition: NonNullable<DeviceTypeConfigurationConfig['partition']>,
@@ -134,7 +132,7 @@ export interface BurnOperation extends Operation {
 }
 
 export const commands = {
-	copy(image: string, operation: CopyOperation) {
+	async copy(image: string, operation: CopyOperation) {
 		// Default image to the given path
 		operation.from.image ??= image;
 		operation.to.image ??= image;
@@ -147,26 +145,24 @@ export const commands = {
 				Required<Pick<typeof operation.to, 'image'>>,
 		);
 
-		return imagefs
+		await imagefs
 			.interact(fromDefinition.image, fromDefinition.partition, function (_fs) {
-				const readFileAsync = Promise.promisify(_fs.readFile);
-				return readFileAsync(fromDefinition.path).then((newContents) =>
-					newContents.toString(),
-				);
+				return _fs.promises
+					.readFile(fromDefinition.path)
+					.then((newContents) => newContents.toString());
 			})
 			.then((content) =>
 				imagefs.interact(
 					toDefinition.image,
 					toDefinition.partition,
 					function (_fs) {
-						const writeFileAsync = Promise.promisify(_fs.writeFile);
-						return writeFileAsync(toDefinition.path, content);
+						return _fs.promises.writeFile(toDefinition.path, content);
 					},
 				),
 			);
 	},
 
-	replace(image: string, operation: ReplaceOperation) {
+	async replace(image: string, operation: ReplaceOperation) {
 		// Default image to the given path
 		operation.file.image ??= image;
 		const fileDefinition = normalizeDefinition(
@@ -174,46 +170,45 @@ export const commands = {
 				Required<Pick<typeof operation.file, 'image'>>,
 		);
 
-		return imagefs.interact(
+		await imagefs.interact(
 			fileDefinition.image,
 			fileDefinition.partition,
 			function (_fs) {
-				const readFileAsync = Promise.promisify(_fs.readFile);
-				const writeFileAsync = Promise.promisify(_fs.writeFile);
-				return readFileAsync(fileDefinition.path).then(function (contents) {
-					const newContents = contents
-						.toString()
-						.replace(operation.find, operation.replace);
-					return writeFileAsync(fileDefinition.path, newContents);
-				});
+				return _fs.promises
+					.readFile(fileDefinition.path)
+					.then(function (contents) {
+						const newContents = contents
+							.toString()
+							.replace(operation.find, operation.replace);
+						return _fs.promises.writeFile(fileDefinition.path, newContents);
+					});
 			},
 		);
 	},
 
-	'run-script'(image: string, operation: RunScriptOperation) {
+	async 'run-script'(image: string, operation: RunScriptOperation) {
 		operation.script = path.join(image, operation.script);
-		const operationArguments = (operation.arguments ??= []);
+		operation.arguments ??= [];
 
-		return fs.chmod(operation.script, 0o755).then(function () {
-			return child_process.spawn(operation.script, operationArguments, {
-				// Some scripts rely on other executable
-				// files within the same directory
-				cwd: image,
+		await fs.chmod(operation.script, 0o755);
+		return child_process.spawn(operation.script, operation.arguments, {
+			// Some scripts rely on other executable
+			// files within the same directory
+			cwd: image,
 
-				// Inherit stdio so we can interact with script.
-				// We're not able to test this since stdin file
-				// descriptor is not opened for writing when not
-				// running the process in a tty.
-				// Notice we pass `process.stdin` directly instead
-				// of using 'inherit' since the latter one is
-				// not supported in v0.10.
-				stdio: [process.stdin, 'pipe', 'pipe'],
-				shell: true,
-			});
+			// Inherit stdio so we can interact with script.
+			// We're not able to test this since stdin file
+			// descriptor is not opened for writing when not
+			// running the process in a tty.
+			// Notice we pass `process.stdin` directly instead
+			// of using 'inherit' since the latter one is
+			// not supported in v0.10.
+			stdio: [process.stdin, 'pipe', 'pipe'],
+			shell: true,
 		});
 	},
 
-	burn(
+	async burn(
 		image: string,
 		operation: BurnOperation,
 		options?: { drive: AdapterSourceDestination | string },
@@ -222,60 +217,58 @@ export const commands = {
 		image = operation.image ?? image;
 		const emitter = new EventEmitter();
 
-		return Promise.try(function () {
-			if (options?.drive == null) {
-				throw new Error('Missing drive option');
-			}
+		if (options?.drive == null) {
+			throw new Error('Missing drive option');
+		}
 
-			const file = new sdk.sourceDestination.File({
-				path: image,
-			});
-			return Promise.props({
-				drive: getDrive(options.drive),
-				source: file.getInnerSource(),
-			});
-		}).then(function ({ drive, source }) {
-			const start = Date.now();
-			let transferred = 0;
-			void sdk.multiWrite
-				.pipeSourceToDestinations({
-					source,
-					destinations: [drive],
-					onFail(_dest, error) {
-						return emitter.emit('error', error);
-					},
-					onProgress(progress) {
-						let type = null;
-						if (progress.type === 'flashing') {
-							type = 'write' as const;
-						}
-						if (progress.type === 'verifying') {
-							type = 'check' as const;
-						}
-						if (type == null) {
-							return;
-						}
-
-						progress.type = type as typeof progress.type;
-						const progressState = {
-							type,
-							percentage: progress.percentage,
-							transferred: progress.position,
-							length: progress.bytes,
-							remaining: progress.bytes - progress.position,
-							eta: progress.eta,
-							runtime: Date.now() - start,
-							delta: progress.position - transferred,
-							speed: progress.speed,
-						};
-						transferred = progressState.transferred;
-						return emitter.emit('progress', progressState);
-					},
-					verify: true,
-				})
-				.then(() => emitter.emit('end'));
-
-			return emitter;
+		const file = new sdk.sourceDestination.File({
+			path: image,
 		});
+		const [drive, source] = await Promise.all([
+			getDrive(options.drive),
+			file.getInnerSource(),
+		]);
+		const start = Date.now();
+		let transferred = 0;
+		void sdk.multiWrite
+			.pipeSourceToDestinations({
+				source,
+				destinations: [drive],
+				onFail(_dest, error) {
+					return emitter.emit('error', error);
+				},
+				onProgress(progress) {
+					let type = null;
+					if (progress.type === 'flashing') {
+						type = 'write' as const;
+					}
+					if (progress.type === 'verifying') {
+						type = 'check' as const;
+					}
+					if (type == null) {
+						return;
+					}
+
+					// @ts-expect-error I'm not sure why we are changing the type here to something incompaible.
+					progress.type = type;
+					const progressState = {
+						type,
+						percentage: progress.percentage,
+						transferred: progress.position,
+						length: progress.bytes,
+						remaining: progress.bytes - progress.position,
+						eta: progress.eta,
+						runtime: Date.now() - start,
+						delta: progress.position - transferred,
+						speed: progress.speed,
+					};
+					transferred = progressState.transferred;
+					return emitter.emit('progress', progressState);
+				},
+				verify: true,
+			})
+			.then(() => emitter.emit('end'));
+
+		return emitter;
 	},
 };

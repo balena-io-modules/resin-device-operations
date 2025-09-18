@@ -19,12 +19,12 @@ limitations under the License.
  */
 
 import { EventEmitter } from 'events';
-import Promise from 'bluebird';
 import rindle from 'rindle';
 import * as _ from 'lodash';
 import * as utils from './utils';
 import * as action from './action';
 import type { Operation } from './commands';
+import { setTimeout } from 'timers/promises';
 
 export interface OperationExecutionEvent extends EventEmitter {
 	stdout?: EventEmitter;
@@ -131,7 +131,7 @@ export const execute = function (
 
 	const emitter: EventEmitter & { ended?: boolean } = new EventEmitter();
 
-	Promise.try(function () {
+	void (async function () {
 		operations = utils.filterWhenMatches(operations, options);
 		const promises = _.map(operations, (operation) =>
 			action.run(image, operation, options),
@@ -150,49 +150,49 @@ export const execute = function (
 			return emitterOn.apply(emitter, args);
 		};
 
-		return Promise.delay(1).then(() =>
-			Promise.each(promises, function (promise, index) {
-				const state = {
-					operation: operations[index],
-					percentage: action.getOperationProgress(index, operations),
-				};
+		await setTimeout(1);
 
-				emitter.emit('state', state);
+		let index = 0;
+		for (const promise of promises) {
+			const state = {
+				operation: operations[index],
+				percentage: action.getOperationProgress(index, operations),
+			};
 
-				return promise().then(function (actionEvent: OperationExecutionEvent) {
-					// Pipe stdout/stderr events
-					if (actionEvent == null) {
-						return;
-					}
-					if (actionEvent.stdout != null) {
-						actionEvent.stdout.on('data', (data) =>
-							emitter.emit('stdout', data),
-						);
-					}
+			emitter.emit('state', state);
 
-					if (actionEvent.stderr != null) {
-						actionEvent.stderr.on('data', (data) =>
-							emitter.emit('stderr', data),
-						);
-					}
+			await promise().then(async function (
+				actionEvent: OperationExecutionEvent,
+			) {
+				// Pipe stdout/stderr events
+				if (actionEvent == null) {
+					return;
+				}
+				if (actionEvent.stdout != null) {
+					actionEvent.stdout.on('data', (data) => emitter.emit('stdout', data));
+				}
 
-					// Emit burn command progress state as `burn`
-					actionEvent.on('progress', (stateEvent) =>
-						emitter.emit('burn', stateEvent),
-					);
+				if (actionEvent.stderr != null) {
+					actionEvent.stderr.on('data', (data) => emitter.emit('stderr', data));
+				}
 
-					return rindle.wait(actionEvent).spread(function (code: unknown) {
-						// TODO: the number check is needed here because `rindle` is getting
-						// the `{ sourceChecksum }` response that is otherwise treated as an error code
-						// This hack is ugly and should be fixed in a better way.
-						if (_.isNumber(code) && code !== 0) {
-							throw new Error(`Exited with error code: ${code}`);
-						}
-					});
-				});
-			}),
-		);
-	})
+				// Emit burn command progress state as `burn`
+				actionEvent.on('progress', (stateEvent) =>
+					emitter.emit('burn', stateEvent),
+				);
+
+				const [code] = await rindle.wait(actionEvent);
+				// TODO: the number check is needed here because `rindle` is getting
+				// the `{ sourceChecksum }` response that is otherwise treated as an error code
+				// This hack is ugly and should be fixed in a better way.
+				if (_.isNumber(code) && code !== 0) {
+					throw new Error(`Exited with error code: ${code}`);
+				}
+			});
+
+			index++;
+		}
+	})()
 		.then(function () {
 			emitter.emit('end');
 

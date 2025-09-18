@@ -87,7 +87,13 @@ export const run = function (
 	operation: Operation,
 	options: object,
 ) {
-	const action = commands[operation.command as keyof typeof commands];
+	const action = commands[operation.command as keyof typeof commands] as
+		| ((
+				image: string,
+				operation: Operation,
+				options?: object,
+		  ) => Promise<unknown>)
+		| undefined;
 
 	if (action == null) {
 		throw new Error(`Unknown command: ${operation.command}`);
