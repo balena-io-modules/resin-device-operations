@@ -144,8 +144,8 @@ export const execute = function (
 		emitter.on = function (...args) {
 			const [event, callback] = args;
 			if (event === 'end' && emitter.ended) {
-				// Should this return 'emitterOn' to continue the 'this' chain as per the typings?
-				return (callback as (...args: any[]) => unknown)();
+				(callback as (...args: any[]) => unknown)();
+				return emitter;
 			}
 			return emitterOn.apply(emitter, args);
 		};

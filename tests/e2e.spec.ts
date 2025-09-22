@@ -102,7 +102,7 @@ wary.it(
 wary.it(
 	'should copy multiple files between raspberry pi partitions',
 	{ raspberrypi: RASPBERRY_PI },
-	function (images) {
+	async function (images) {
 		const configuration = operations.execute(images.raspberrypi, [
 			{
 				command: 'copy',
@@ -147,6 +147,52 @@ wary.it(
 				}),
 			)
 			.then((contents) => expect(contents).to.equal(FILES['cmdline.txt']));
+	},
+);
+
+wary.it(
+	`should call the .on('end') callback, even if it was registered after the "end" had already fired, and allow chaining like a normal EventEmitter`,
+	{ raspberrypi: RASPBERRY_PI },
+	async function (images) {
+		const configuration = operations.execute(images.raspberrypi, [
+			{
+				command: 'copy',
+				from: {
+					partition: {
+						primary: 1,
+					},
+					path: '/cmdline.txt',
+				},
+				to: {
+					partition: {
+						primary: 4,
+						logical: 1,
+					},
+					path: '/cmdline.txt',
+				},
+			},
+		]);
+
+		const onStateResult = configuration.on('state', () => {
+			return;
+		});
+		expect(onStateResult).to.have.property('on').that.is.a('function');
+
+		await rindle
+			.wait(configuration)
+			.then(() =>
+				imagefs.interact(images.raspberrypi, 5, function (_fs) {
+					const readFileAsync = _fs.promises.readFile;
+					return readFileAsync('/cmdline.txt').then((b) => b.toString());
+				}),
+			)
+			.then((contents) => expect(contents).to.equal(FILES['cmdline.txt']));
+
+		const onEndResult = configuration.on('end', () => {
+			return;
+		});
+		expect(onEndResult).to.have.property('on').that.is.a('function');
+		expect(onEndResult).to.equal(onStateResult);
 	},
 );
 
