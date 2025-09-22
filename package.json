@@ -21,9 +21,11 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "npm run build && mocha -r ts-node/register/transpile-only --reporter spec tests/**/*.spec.ts",
+    "test": "npm run build && npm run lint && mocha -r ts-node/register/transpile-only --reporter spec tests/**/*.spec.ts",
     "build": "gulp build",
     "prepare": "npm run build",
+    "lint": "balena-lint -e ts lib tests",
+    "lint-fix": "balena-lint -e ts lib tests --fix",
     "readme": "jsdoc2md --template doc/README.hbs build/operations.js > README.md"
   },
   "author": "Balena Ltd. <hello@balena.io>",
@@ -32,6 +34,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@balena/lint": "^9.3.7",
     "@types/bluebird": "^3.5.42",
     "@types/chai": "^4.3.3",
     "@types/chai-as-promised": "^7.1.5",
