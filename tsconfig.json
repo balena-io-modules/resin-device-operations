@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "importHelpers": true,
+        "esModuleInterop": true,
+        "noImplicitAny": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "strictNullChecks": true,
+        "allowJs": true,
+        "skipLibCheck": true
+    },
+    "include": [
+        "typings/*.d.ts",
+        "lib/**/*.ts",
+        "tests/**/*.ts"
+    ]
+}
