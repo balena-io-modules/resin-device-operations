@@ -3,10 +3,10 @@
   "version": "3.0.0",
   "description": "Execute device spec operations",
   "main": "build/operations.js",
-  "homepage": "https://github.com/resin-io-modules/resin-device-operations",
+  "homepage": "https://github.com/balena-io-modules/resin-device-operations",
   "repository": {
     "type": "git",
-    "url": "git://github.com/resin-io-modules/resin-device-operations.git"
+    "url": "git://github.com/balena-io-modules/resin-device-operations.git"
   },
   "keywords": [
     "resin",
@@ -26,7 +26,7 @@
     "prepare": "npm run build",
     "readme": "jsdoc2md --template doc/README.hbs build/operations.js > README.md"
   },
-  "author": "Juan Cruz Viotti <juan@resin.io>",
+  "author": "Balena Ltd. <hello@balena.io>",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=20"
