@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.4.1] - 2017-04-14
 
+# v3.0.1
+## (2025-09-22)
+
+* Lint tests [Thodoris Greasidis]
+* Convert tests to TypeScript [Thodoris Greasidis]
+
 # v3.0.0
 ## (2025-06-06)
 

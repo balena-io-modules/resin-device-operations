@@ -1,4 +1,22 @@
 - commits:
+    - subject: Lint tests
+      hash: 67dd3f274e638e3ee3885dfa25c0f4c9ec96b9e3
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Thodoris Greasidis
+    - subject: Convert tests to TypeScript
+      hash: 76ac90435a4b29f7771fbeab24e138e9d400f361
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+      author: Thodoris Greasidis
+  version: 3.0.1
+  title: ""
+  date: 2025-09-22T23:05:24.747Z
+- commits:
     - subject: Bump etcher-sdk to v10.0.0
       hash: d91de0613eec00aab75c64f317c5ab1752ae46bd
       body: |

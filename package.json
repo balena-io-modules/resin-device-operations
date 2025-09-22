@@ -1,6 +1,6 @@
 {
   "name": "resin-device-operations",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Execute device spec operations",
   "main": "build/operations.js",
   "homepage": "https://github.com/balena-io-modules/resin-device-operations",
@@ -64,6 +64,6 @@
     "rindle": "^1.3.0"
   },
   "versionist": {
-    "publishedAt": "2025-06-06T18:28:28.080Z"
+    "publishedAt": "2025-09-22T23:05:24.789Z"
   }
 }
