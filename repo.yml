@@ -2,3 +2,5 @@ type: 'node'
 upstream:
   - repo: 'balena-image-fs'
     url: 'https://github.com/balena-io-modules/balena-image-fs'
+  - repo: 'rindle'
+    url: 'https://github.com/balena-io-modules/rindle'
