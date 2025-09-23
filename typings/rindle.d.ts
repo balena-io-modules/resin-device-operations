@@ -1,1 +1,3 @@
-declare module 'rindle';
+declare module 'rindle' {
+	function wait(stream: Stream): Promise<unknown[]>;
+}

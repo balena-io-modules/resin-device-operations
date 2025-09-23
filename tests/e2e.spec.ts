@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import * as sinon from 'sinon';
 import { expect, use as chaiUse } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -8,9 +7,10 @@ import path from 'path';
 import * as imagefs from 'balena-image-fs';
 import wary from 'wary';
 import rindle from 'rindle';
-import operations from '../build/operations';
-import utils from '../build/utils';
+import * as operations from '../build/operations';
+import * as utils from '../build/utils';
 import * as sdk from 'etcher-sdk';
+import { setTimeout } from 'timers/promises';
 
 const RASPBERRY_PI = path.join(__dirname, 'images', 'raspberrypi.img');
 const EDISON = path.join(__dirname, 'images', 'edison-config.img');
@@ -34,17 +34,22 @@ wary.it('should be fulfilled if operations is undefined', {}, function () {
 	return expect(promise).to.be.fulfilled;
 });
 
-wary.it('should be fulfilled even if it finished long ago', {}, function () {
-	const f = function () {
-		const configuration = operations.execute(RASPBERRY_PI);
-		return Promise.delay(1000).return(configuration);
-	};
+wary.it(
+	'should be fulfilled even if it finished long ago',
+	{},
+	async function () {
+		const f = async function () {
+			const configuration = operations.execute(RASPBERRY_PI);
+			await setTimeout(1000);
+			return configuration;
+		};
 
-	return f().then(function (configuration) {
-		const promise = rindle.wait(configuration);
-		return expect(promise).to.be.fulfilled;
-	});
-});
+		return f().then(function (configuration) {
+			const promise = rindle.wait(configuration);
+			return expect(promise).to.be.fulfilled;
+		});
+	},
+);
 
 wary.it(
 	'should be rejected if the command does not exist',
@@ -86,7 +91,7 @@ wary.it(
 			.wait(configuration)
 			.then(() =>
 				imagefs.interact(images.raspberrypi, 5, function (_fs) {
-					const readFileAsync = Promise.promisify(_fs.readFile);
+					const readFileAsync = _fs.promises.readFile;
 					return readFileAsync('/cmdline.txt').then((b) => b.toString());
 				}),
 			)
@@ -97,7 +102,7 @@ wary.it(
 wary.it(
 	'should copy multiple files between raspberry pi partitions',
 	{ raspberrypi: RASPBERRY_PI },
-	function (images) {
+	async function (images) {
 		const configuration = operations.execute(images.raspberrypi, [
 			{
 				command: 'copy',
@@ -137,11 +142,57 @@ wary.it(
 			.wait(configuration)
 			.then(() =>
 				imagefs.interact(images.raspberrypi, 1, function (_fs) {
-					const readFileAsync = Promise.promisify(_fs.readFile);
+					const readFileAsync = _fs.promises.readFile;
 					return readFileAsync('/cmdline.copy').then((b) => b.toString());
 				}),
 			)
 			.then((contents) => expect(contents).to.equal(FILES['cmdline.txt']));
+	},
+);
+
+wary.it(
+	`should call the .on('end') callback, even if it was registered after the "end" had already fired, and allow chaining like a normal EventEmitter`,
+	{ raspberrypi: RASPBERRY_PI },
+	async function (images) {
+		const configuration = operations.execute(images.raspberrypi, [
+			{
+				command: 'copy',
+				from: {
+					partition: {
+						primary: 1,
+					},
+					path: '/cmdline.txt',
+				},
+				to: {
+					partition: {
+						primary: 4,
+						logical: 1,
+					},
+					path: '/cmdline.txt',
+				},
+			},
+		]);
+
+		const onStateResult = configuration.on('state', () => {
+			return;
+		});
+		expect(onStateResult).to.have.property('on').that.is.a('function');
+
+		await rindle
+			.wait(configuration)
+			.then(() =>
+				imagefs.interact(images.raspberrypi, 5, function (_fs) {
+					const readFileAsync = _fs.promises.readFile;
+					return readFileAsync('/cmdline.txt').then((b) => b.toString());
+				}),
+			)
+			.then((contents) => expect(contents).to.equal(FILES['cmdline.txt']));
+
+		const onEndResult = configuration.on('end', () => {
+			return;
+		});
+		expect(onEndResult).to.have.property('on').that.is.a('function');
+		expect(onEndResult).to.equal(onStateResult);
 	},
 );
 
@@ -167,7 +218,7 @@ wary.it(
 			.wait(configuration)
 			.then(() =>
 				imagefs.interact(images.raspberrypi, 1, function (_fs) {
-					const readFileAsync = Promise.promisify(_fs.readFile);
+					const readFileAsync = _fs.promises.readFile;
 					return readFileAsync('/cmdline.txt').then((b) => b.toString());
 				}),
 			)
@@ -210,7 +261,7 @@ wary.it(
 			.wait(configuration)
 			.then(() =>
 				imagefs.interact(images.raspberrypi, 1, function (_fs) {
-					const readFileAsync = Promise.promisify(_fs.readFile);
+					const readFileAsync = _fs.promises.readFile;
 					return readFileAsync('/cmdline.txt').then((b) => b.toString());
 				}),
 			)
@@ -241,7 +292,7 @@ wary.it(
 			.wait(configuration)
 			.then(() =>
 				imagefs.interact(images.edison, undefined, function (_fs) {
-					const readFileAsync = Promise.promisify(_fs.readFile);
+					const readFileAsync = _fs.promises.readFile;
 					return readFileAsync('/config.json').then((b) => b.toString());
 				}),
 			)
@@ -306,7 +357,7 @@ wary.it(
 			.wait(configuration)
 			.then(() =>
 				imagefs.interact(images.raspberrypi, 1, function (_fs) {
-					const readFileAsync = Promise.promisify(_fs.readFile);
+					const readFileAsync = _fs.promises.readFile;
 					return readFileAsync('/cmdline.txt').then((b) => b.toString());
 				}),
 			)
@@ -418,43 +469,40 @@ wary.it(
 	{ raspberrypi: RASPBERRY_PI },
 	function (images) {
 		const configure = () =>
-			Promise.try(() =>
-				operations.execute(images.raspberrypi, [
-					{
-						command: 'replace',
-						file: {
-							partition: {
-								primary: 1,
-							},
-							path: '/cmdline.txt',
+			operations.execute(images.raspberrypi, [
+				{
+					command: 'replace',
+					file: {
+						partition: {
+							primary: 1,
 						},
-						find: 'lpm_enable=0',
-						replace: 'lpm_enable=1',
+						path: '/cmdline.txt',
 					},
-				]),
-			);
+					find: 'lpm_enable=0',
+					replace: 'lpm_enable=1',
+				},
+			]);
 
-		return configure().then(function (configuration) {
-			const stateSpy = sinon.spy();
-			configuration.on('state', stateSpy);
+		const configuration = configure();
+		const stateSpy = sinon.spy();
+		configuration.on('state', stateSpy);
 
-			return rindle.wait(configuration).then(function () {
-				expect(stateSpy.calledOnce).to.be.true;
-				expect(stateSpy.firstCall.args[0]).to.deep.equal({
-					operation: {
-						command: 'replace',
-						file: {
-							image: images.raspberrypi,
-							partition: {
-								primary: 1,
-							},
-							path: '/cmdline.txt',
+		return rindle.wait(configuration).then(function () {
+			expect(stateSpy.calledOnce).to.be.true;
+			expect(stateSpy.firstCall.args[0]).to.deep.equal({
+				operation: {
+					command: 'replace',
+					file: {
+						image: images.raspberrypi,
+						partition: {
+							primary: 1,
 						},
-						find: 'lpm_enable=0',
-						replace: 'lpm_enable=1',
+						path: '/cmdline.txt',
 					},
-					percentage: 100,
-				});
+					find: 'lpm_enable=0',
+					replace: 'lpm_enable=1',
+				},
+				percentage: 100,
 			});
 		});
 	},
@@ -599,7 +647,7 @@ wary.it(
 	},
 );
 
-const mockBlockDeviceFromFile = async function (filepath) {
+const mockBlockDeviceFromFile = async function (filepath: string) {
 	const drive = {
 		raw: filepath,
 		device: filepath,
@@ -662,11 +710,11 @@ wary.it(
 		const state = progressSpy.firstCall.args[0];
 		expect(state.length).to.not.equal(0);
 		expect(state.length).to.equal(size);
-		const results = await Promise.props({
-			raspberrypi: fs.readFile(images.raspberrypi),
-			random: fs.readFile(images.random),
-		});
-		expect(results.random).to.deep.equal(results.raspberrypi);
+		const [raspberrypi, random] = await Promise.all([
+			fs.readFile(images.raspberrypi),
+			fs.readFile(images.random),
+		]);
+		expect(random).to.deep.equal(raspberrypi);
 	},
 );
 
@@ -714,7 +762,7 @@ wary.it(
 			.wait(configuration)
 			.then(() =>
 				imagefs.interact(images.edison, undefined, function (_fs) {
-					const readFileAsync = Promise.promisify(_fs.readFile);
+					const readFileAsync = _fs.promises.readFile;
 					return readFileAsync('/config.json').then((b) => b.toString());
 				}),
 			)
@@ -783,7 +831,7 @@ wary.it(
 			.wait(configuration)
 			.then(() =>
 				imagefs.interact(images.edison, undefined, function (_fs) {
-					const readFileAsync = Promise.promisify(_fs.readFile);
+					const readFileAsync = _fs.promises.readFile;
 					return readFileAsync('/config.json').then((b) => b.toString());
 				}),
 			)
