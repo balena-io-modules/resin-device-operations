@@ -1,4 +1,18 @@
 - commits:
+    - subject: "Add id-token: write permission for NPM OIDC publishing"
+      hash: 9a60e8a8cd5ee722ef712a5e4ac33a148b45e664
+      body: ""
+      footer:
+        Change-type: patch
+        change-type: patch
+        Signed-off-by: Kyle Harding <kyle@balena.io>
+        signed-off-by: Kyle Harding <kyle@balena.io>
+      author: Kyle Harding
+      nested: []
+  version: 4.0.1
+  title: ""
+  date: 2026-02-19T01:53:48.696Z
+- commits:
     - subject: Update rindle to 3.0.0
       hash: 22752b30b3321accfd648568558bf1f929583266
       body: |
